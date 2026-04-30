@@ -1,0 +1,84 @@
+# CI — runs on every push to main and every pull request to main.
+#
+# Matrix: Ubuntu / Windows / macOS, Node 22 LTS.
+#
+# Per-platform steps: install, type check (tsc -b), lint + format
+# (biome ci), tests with v1 coverage thresholds enforced
+# (pnpm test:coverage). Linux-only addition: the runner smoke
+# (real Docker on the GitHub-hosted runner) and the MCP client
+# smoke (mock MCP server, no LLM key needed). Live-LLM smokes
+# (chat E2E, MCP E2E) stay gated behind RUN_LIVE_LLM_TESTS=1 and
+# don't run in CI for v0.1.0 — they're release-time manual checks.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs on the same PR when a new commit lands —
+# saves CI minutes on force-pushes. On main, every commit completes
+# its run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Minimum permissions: read source. CI doesn't need write anywhere.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      # Don't bail on the first matrix failure — we want to see all
+      # three platforms' results to know whether a regression is
+      # platform-specific or universal.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        # No `version` input: the action reads the workspace's
+        # `packageManager` field (pinned to pnpm@10.33.2 at repo root).
+
+      - name: Setup Node.js 22 LTS with pnpm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          # Caches the pnpm store between runs. setup-node finds
+          # pnpm because pnpm/action-setup ran before this step.
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check (tsc -b)
+        run: pnpm exec tsc -b
+
+      - name: Lint and format check (biome ci)
+        run: pnpm exec biome ci .
+
+      - name: Test with coverage (v1 floor enforced)
+        run: pnpm test:coverage
+
+      # Linux-only smokes from here down. Windows / macOS GitHub
+      # runners don't have Docker pre-installed, so the runner
+      # smoke would fail on those platforms for environment
+      # reasons, not code reasons.
+      - name: Runner smoke (real Docker)
+        if: matrix.os == 'ubuntu-latest'
+        run: node smoke-runner.cjs
+
+      - name: MCP client smoke (mock MCP server)
+        if: matrix.os == 'ubuntu-latest'
+        run: node smoke-mcp-client.cjs

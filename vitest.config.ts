@@ -36,7 +36,10 @@ export default defineConfig({
     passWithNoTests: true,
     coverage: {
       provider: "v8",
-      reporter: ["text", "html", "lcov"],
+      // `json-summary` writes `coverage/coverage-summary.json` — read by
+      // `.github/scripts/coverage-table.mjs` to render the per-package
+      // sticky-comment table on PRs.
+      reporter: ["text", "html", "lcov", "json-summary"],
       include: ["packages/*/src/**/*.ts"],
       exclude: ["packages/*/src/**/*.{test,spec}.ts", "packages/*/src/**/index.ts"],
       thresholds: {

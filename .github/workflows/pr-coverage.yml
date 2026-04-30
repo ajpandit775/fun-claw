@@ -1,0 +1,58 @@
+# PR Coverage — runs on every pull request, posts a sticky comment
+# with per-package coverage. The hard-fail enforcement of the v1
+# floor happens inside `pnpm test:coverage` (vitest's `thresholds`
+# config); this workflow's job is to make the absolute numbers
+# visible at PR-review time.
+#
+# "Sticky comment" = the PR thread shows ONE coverage comment that
+# updates in place on each push, instead of a new comment per
+# push. Provided by marocchino/sticky-pull-request-comment, pinned
+# to v2.
+
+name: PR Coverage
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write   # required to post the sticky comment
+
+jobs:
+  coverage:
+    name: Per-package coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Run tests with coverage
+        # Same command as ci.yml; the v1 floor enforcement also
+        # fires here, so a PR that drops coverage below the floor
+        # fails this workflow before the sticky comment posts.
+        run: pnpm test:coverage
+
+      - name: Generate per-package coverage table
+        id: coverage
+        run: node .github/scripts/coverage-table.mjs
+
+      - name: Post sticky coverage comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          # `header: pr-coverage` makes the action recognize this
+          # as the same comment across pushes — it edits in place
+          # rather than posting fresh.
+          header: pr-coverage
+          message: ${{ steps.coverage.outputs.markdown }}

@@ -1,0 +1,180 @@
+# Release — triggered on a tag push matching `v*.*.*`.
+#
+# Job graph:
+#
+#     test (matrix)
+#         |
+#         +---> publish-runtime-image (GHCR)
+#         |
+#         +---> publish-npm (npmjs.com via OIDC trusted publishing)
+#                                 |
+#         +-----------------------+
+#         |
+#     github-release (creates the GH release after both publishes)
+#
+# Notes for v0.1.0 bootstrap:
+#   - npm OIDC trusted publishing needs to be configured on
+#     npmjs.com BEFORE this workflow can publish (chicken-and-egg:
+#     trusted publishing requires the package to already exist).
+#   - For v0.1.0, the maintainer publishes manually (Task 5 of
+#     Slice 11). After that first publish + the npmjs.com OIDC
+#     setup, this workflow handles all subsequent releases.
+#   - workflow_dispatch is wired so a partially-failed v0.1.0
+#     release (e.g. GHCR push succeeded but npm publish hadn't
+#     been OIDC-configured yet) can be re-run from the Actions
+#     UI without needing a new tag.
+#   - Long-lived secrets are NOT used. GHCR auth uses the
+#     workflow's own GITHUB_TOKEN (issued per-run by GitHub).
+#     npm auth uses OIDC (short-lived token issued at publish
+#     time). No NPM_TOKEN, no GHCR_TOKEN, nothing in repo
+#     secrets that survives the workflow run.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (must already exist; manual re-trigger of a tag push)'
+        required: true
+        type: string
+
+# Job-level permissions are minimum-needed; individual jobs grant
+# additional permissions where required (id-token for OIDC,
+# packages for GHCR, contents for the release).
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      # Release: bail fast on any matrix failure. Don't publish a
+      # build that fails on any platform.
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsc -b
+      - run: pnpm exec biome ci .
+      - run: pnpm test:coverage
+
+  publish-runtime-image:
+    name: Publish runtime image to GHCR
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write   # push to ghcr.io/ajpandit775/fun-claw-runtime
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          # GITHUB_TOKEN is auto-provided per workflow run and has
+          # packages:write because the job declares it. No long-lived
+          # secret involved.
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build runtime image (tags with version + latest)
+        run: pnpm -F @funclaw/runtime-image run build
+
+      - name: Push runtime image
+        run: |
+          VERSION=$(node -p "require('./packages/runtime-image/package.json').version")
+          docker push "ghcr.io/ajpandit775/fun-claw-runtime:${VERSION}"
+          docker push "ghcr.io/ajpandit775/fun-claw-runtime:latest"
+
+  publish-npm:
+    name: Publish fun-claw to npm via OIDC
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write   # required for OIDC trusted publishing
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+
+      # `registry-url` configures npm to talk to npmjs.com AND
+      # makes `npm publish --provenance` use the OIDC token from
+      # the id-token: write permission above. No NODE_AUTH_TOKEN.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build CLI bundle
+        run: pnpm -F fun-claw run build
+
+      - name: Sync README into packages/cli for the published tarball
+        # Belt-and-braces: the prepublishOnly script (added in Task 5)
+        # also does this. Running it here too means CI publishes
+        # whatever the workspace root README says, even if a
+        # contributor forgot to run the script locally.
+        run: cp README.md packages/cli/README.md
+
+      - name: Publish to npm with provenance
+        run: npm publish --provenance --access public
+        working-directory: packages/cli
+
+  github-release:
+    name: Create GitHub release
+    needs: [publish-runtime-image, publish-npm]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write   # create the release
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Full history so `gh release create --generate-notes`
+          # can generate notes from the commit log since the
+          # previous tag.
+          fetch-depth: 0
+
+      - name: Determine tag name
+        id: tag
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub release with auto-generated notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.tag.outputs.tag }}" \
+            --title "${{ steps.tag.outputs.tag }}" \
+            --generate-notes \
+            --verify-tag

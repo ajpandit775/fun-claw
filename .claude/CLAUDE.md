@@ -620,3 +620,15 @@ Image versioning policy: for v0.1.0, the runtime image version is locked 1:1 wit
 
 ## 2026-04-29: Slice 11, Task 2 — image size context (220 MB compressed)
 Image size context (220MB compressed): the runtime image's primary contributors are Node 22, Python 3.12, build-essential, and pnpm. Future size optimization (v0.2.0+) would target the "tools rarely used by skills" fraction, but at v0.1.0 we keep the toolchain broad because skill compatibility matters more than image size. Also note: `docker images` shows ~963MB which is Docker Desktop's overlay accounting, not registry transfer size; the real number is the compressed save (~220MB). Future sessions: do not panic at the 963 MB number — verify with `docker save | wc -c` (uncompressed tar of layer blobs) or `docker save | gzip -1 | wc -c` (rough registry-comparable) before assuming the image is over budget.
+
+## 2026-04-29: Slice 11, Task 3 — workflow actions are major-version pinned at v0.1.0
+Workflow actions are major-version pinned (@v5, @v4, etc) at v0.1.0. SHA-pinning is more secure against compromised action releases but adds maintenance friction. Revisit at v1.0.0 — by then if the project has security-conscious contributors, the manual SHA bump cycle is acceptable cost for the tighter security posture.
+
+## 2026-04-29: Slice 11, Task 3 — `@funclaw/cli` has 0% unit test coverage at v0.1.0
+`@funclaw/cli` has 0% unit test coverage at v0.1.0 because it's primarily orchestration code covered by E2E smokes (smoke-runner, smoke-chat-e2e, smoke-mcp-e2e). The vitest coverage reporter doesn't count smokes. v0.2.0 should: (a) split the cli threshold from the adapter packages so cli's 0% becomes visible rather than hidden in the aggregate, (b) write unit tests for the parts that ARE pure logic (config-resolution helpers, error formatters), and (c) consider whether smoke results should be reflected in coverage somehow. Don't ship v1.0 with cli at 0%.
+
+## 2026-04-29: Slice 11, Task 3 — GHCR login uses `github.actor`, untested at v0.1.0
+GHCR login in release.yml uses `github.actor` + `GITHUB_TOKEN`, which works for any repo collaborator without per-user secrets. Untested at v0.1.0 — if it fails on first release, the fallback is hardcoding `username: ajpandit775` since you're the sole maintainer at v0.1.0.
+
+## 2026-04-29: Slice 11, Task 3 — pr-coverage silently no-ops on fork PRs
+pr-coverage workflow uses `pull_request` trigger which restricts fork PRs to read tokens. The sticky comment silently no-ops on fork PRs from external contributors. To enable comments on fork PRs, switch to `pull_request_target` — but that requires careful security review (untrusted PR code can run with elevated permissions in the workflow). Defer until external contributions begin.
