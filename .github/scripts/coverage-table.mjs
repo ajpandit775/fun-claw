@@ -68,8 +68,8 @@ if (total) {
   markdown += `| **Total** | **${fmt(total.lines)}** | **${fmt(total.functions)}** | **${fmt(total.branches)}** | **${fmt(total.statements)}** |\n`;
 }
 
-markdown += "\n_v1 thresholds enforced by `vitest.config.ts` "
-  + "(75% core / 20% adapter floor)._\n";
+markdown +=
+  "\n_v1 thresholds enforced by `vitest.config.ts` " + "(75% core / 20% adapter floor)._\n";
 
 // ---------------------------------------------------------------------------
 // Emit to $GITHUB_OUTPUT (multiline value via heredoc-style delimiter).

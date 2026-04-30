@@ -26,18 +26,16 @@ for (let i = 0; i < args.length; i += 2) {
 let failures = 0;
 let passes = 0;
 
-function runIn(image, cmd, expectedExit = 0) {
+function runIn(image, cmd) {
   // Always pass --rm and override entrypoint to /bin/sh so the
   // entrypoint script's /workspace and /tmp checks don't trip on
   // a fresh container with no bind mount (the entrypoint expects a
   // writable /workspace; the image's pre-created one IS writable
   // for uid 10001, so this is fine, but using /bin/sh gives us
   // more predictable command execution for verification).
-  return spawnSync(
-    "docker",
-    ["run", "--rm", "--entrypoint", "/bin/sh", image, "-c", cmd],
-    { encoding: "utf8" },
-  );
+  return spawnSync("docker", ["run", "--rm", "--entrypoint", "/bin/sh", image, "-c", cmd], {
+    encoding: "utf8",
+  });
 }
 
 function check(name, cmd, validate) {

@@ -66,6 +66,16 @@
           }
         }
       }
+    },
+    {
+      "includes": [".github/scripts/**", "packages/*/scripts/**", "smoke-*.cjs"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
     }
   ]
 }

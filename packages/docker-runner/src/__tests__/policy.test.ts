@@ -151,7 +151,6 @@ describe("validateContainerConfig — Privileged / NetworkMode / PidMode", () =>
   it("FC-1011 rejects undefined NetworkMode", () => {
     const c = baseConfig();
     if (c.HostConfig !== undefined) {
-      // biome-ignore lint/performance/noDelete: required for the test
       delete c.HostConfig.NetworkMode;
     }
     expectRejection(c, "FC-1011");
@@ -174,7 +173,6 @@ describe("validateContainerConfig — ReadonlyRootfs / Capabilities", () => {
   it("FC-1016 rejects undefined ReadonlyRootfs", () => {
     const c = baseConfig();
     if (c.HostConfig !== undefined) {
-      // biome-ignore lint/performance/noDelete: required for the test
       delete c.HostConfig.ReadonlyRootfs;
     }
     expectRejection(c, "FC-1016");
