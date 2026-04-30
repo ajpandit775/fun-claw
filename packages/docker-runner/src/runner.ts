@@ -18,8 +18,8 @@
 //   4. `destroySession(handle)` — stops + removes the container,
 //      idempotent.
 //   5. `listOrphanedSessions(activeIds)` — finds containers carrying the
-//      session label whose UUID isn't in `activeIds`. Slice 10's doctor
-//      consumes this with the active list from `state.json`.
+//      session label whose UUID isn't in `activeIds`. The `funclaw
+//      doctor` command consumes this with the active list from `state.json`.
 //
 // Reference docs:
 //   - .claude/CLAUDE.md "Key rules" (the hardening list).
@@ -54,11 +54,11 @@ const DEFAULT_NANO_CPUS = 2_000_000_000; // 2 cores
 const DEFAULT_PIDS_LIMIT = 256;
 const DEFAULT_TMPFS_BYTES = 1024 * 1024 * 1024; // 1 GiB
 const SESSION_LABEL_KEY = "funclaw.session";
-/** Slice 9 (per ADR-003): every subagent container carries this
- *  additional label alongside `funclaw.session`. Cleanup logic
- *  (`listOrphanedSessions`, Slice 10's `funclaw doctor --clean`)
- *  filters by `funclaw.session`; subagent containers surface in the
- *  same list with a non-undefined `subagentId` field. */
+/** Per ADR-003: every subagent container carries this additional
+ *  label alongside `funclaw.session`. Cleanup logic
+ *  (`listOrphanedSessions`, `funclaw doctor --clean`) filters by
+ *  `funclaw.session`; subagent containers surface in the same list
+ *  with a non-undefined `subagentId` field. */
 const SUBAGENT_LABEL_KEY = "funclaw.subagent";
 const STOP_TIMEOUT_SECONDS = 5;
 
@@ -83,10 +83,10 @@ export interface DockerRunnerConfig {
 
 /**
  * One mount entry for the `/skills` tree, supplied to `createSession`.
- * Each loaded skill maps to exactly one entry; the runner constructs a
- * read-only bind mount at `/skills/<name>` per the Slice 8 mount
- * strategy (per-skill mounts, not a copied tree — avoids host-side
- * copies and the Windows symlink-permission gap).
+ * Each loaded skill maps to exactly one entry; the runner constructs
+ * a read-only bind mount at `/skills/<name>`. Per-skill mounts (not
+ * a copied tree) avoid host-side copies and the Windows
+ * symlink-permission gap.
  */
 export interface SkillMount {
   /** Skill name. Becomes the mount target's last segment:
@@ -107,10 +107,9 @@ export interface OrphanedSessionInfo {
    *  `funclaw.session=<root-uuid>` + `funclaw.subagent=<sub-uuid>`).
    *  Cleanup logic groups by this. */
   sessionId: string;
-  /** Slice 9: when set, this container is a subagent container, and
-   *  the value is the subagent UUID stamped in the
-   *  `funclaw.subagent` label. When undefined, the container is a
-   *  root session container. */
+  /** When set, this container is a subagent container, and the value
+   *  is the subagent UUID stamped in the `funclaw.subagent` label.
+   *  When undefined, the container is a root session container. */
   subagentId?: string;
   state: string;
   created: number;
@@ -135,8 +134,7 @@ export interface ExecOptions {
    * Buffer for binary content (e.g. `write_file` with
    * `encoding: "binary"`).
    *
-   * Slice 8 introduced this option for the `write_file` tool. Existing
-   * callers that omit stdin keep the prior `stdin: false` behavior.
+   * Callers that omit stdin keep the default `stdin: false` behavior.
    */
   stdin?: string | Buffer;
 }
@@ -247,10 +245,10 @@ export class DockerRunner {
    * subsequent commands. Throws FC-1001 / FC-1020 / FC-1xxx policy
    * codes on the documented failure modes.
    *
-   * `skillsMounts` (Slice 8) is the resolved set of skills the chat
-   * command discovered at session-start time. Each entry becomes a
-   * read-only bind mount at `/skills/<name>`. Empty array means no
-   * `/skills` directory exists in the container.
+   * `skillsMounts` is the resolved set of skills the chat command
+   * discovered at session-start time. Each entry becomes a read-only
+   * bind mount at `/skills/<name>`. Empty array means no `/skills`
+   * directory exists in the container.
    */
   async createSession(
     sessionUuid: string,
@@ -262,8 +260,8 @@ export class DockerRunner {
   }
 
   /**
-   * Slice 9 (per ADR-003): spawn a fresh ephemeral container for a
-   * subagent. The container carries TWO labels:
+   * Per ADR-003: spawn a fresh ephemeral container for a subagent.
+   * The container carries TWO labels:
    *   - `funclaw.session=<rootSessionUuid>` (same root UUID as the
    *     parent session — cleanup logic groups by this).
    *   - `funclaw.subagent=<subagentUuid>` (the subagent's own UUID,
@@ -357,8 +355,8 @@ export class DockerRunner {
 
   /**
    * Find containers carrying the `funclaw.session` label whose UUID is
-   * not in `activeSessionIds`. Slice 10's doctor consumes this with the
-   * active list read from `state.json`.
+   * not in `activeSessionIds`. The `funclaw doctor` command consumes
+   * this with the active list read from `state.json`.
    */
   async listOrphanedSessions(
     activeSessionIds: readonly string[] = [],
@@ -387,9 +385,9 @@ export class DockerRunner {
       const sessionId = labels[SESSION_LABEL_KEY];
       if (sessionId === undefined) continue;
       if (active.has(sessionId)) continue;
-      // Slice 9: surface subagent containers with their subagent UUID
-      // populated. Cleanup callers (Slice 10's doctor) decide whether
-      // to display them grouped under the root session.
+      // Surface subagent containers with their subagent UUID
+      // populated. Cleanup callers (e.g. `funclaw doctor`) decide
+      // whether to display them grouped under the root session.
       const subagentId = labels[SUBAGENT_LABEL_KEY];
       orphans.push({
         containerId: c.Id,
@@ -411,11 +409,11 @@ export class DockerRunner {
     skillsMounts: readonly SkillMount[],
     subagentUuid?: string,
   ): Docker.ContainerCreateOptions {
-    // Slice 8: per-skill read-only bind mounts at `/skills/<name>`.
-    // Each loaded skill becomes its own Mount entry. Docker
-    // auto-creates the `/skills/` parent directory under the
-    // read-only rootfs on first mount. Empty `skillsMounts` array
-    // means no `/skills` directory at all (clean degenerate case).
+    // Per-skill read-only bind mounts at `/skills/<name>`. Each
+    // loaded skill becomes its own Mount entry. Docker auto-creates
+    // the `/skills/` parent directory under the read-only rootfs on
+    // first mount. Empty `skillsMounts` array means no `/skills`
+    // directory at all (clean degenerate case).
     //
     // The mount target uses path.posix.join because the in-container
     // path is always POSIX regardless of the host OS — per the
@@ -427,8 +425,7 @@ export class DockerRunner {
         // forward-slash bind sources; the runner passes through
         // whatever `workingDir` resolved to (typically a Windows
         // path from Node's path.resolve). Verified against Docker
-        // Desktop 29.4.1 through the Slice 5/6/7/8/9 smokes — see
-        // `docs/cross-platform.md`.
+        // Desktop 29.4.1; see `docs/cross-platform.md`.
         Type: "bind",
         Source: this.resolved.workingDir,
         Target: "/workspace",
@@ -441,8 +438,8 @@ export class DockerRunner {
       })),
     ];
 
-    // Slice 9: subagent containers carry an extra label for cleanup
-    // and log-filtering visibility. Both root and subagent containers
+    // Subagent containers carry an extra label for cleanup and
+    // log-filtering visibility. Both root and subagent containers
     // share the same `funclaw.session=<rootUuid>` value so cleanup
     // groups them naturally.
     const labels: Record<string, string> = { [SESSION_LABEL_KEY]: sessionUuid };
@@ -485,8 +482,10 @@ export class DockerRunner {
   private async runSetup(container: Docker.Container): Promise<void> {
     // `useradd` and `chown` both pipe to `|| true` so a missing tool or
     // an already-existing user / pre-chowned dir doesn't fail setup.
-    // Slice 11's published image will pre-bake the user and remove the
-    // need for this step.
+    // The published runtime image pre-bakes the user and pre-creates
+    // /workspace owned by uid 10001, so this script is a no-op when
+    // running against fun-claw-runtime — it's a fallback bridge for
+    // configurations that point at a generic base image.
     const setupScript =
       `useradd -u ${SANDBOX_UID} -g 0 -m -s /bin/bash agent 2>/dev/null || true; ` +
       `chown -R ${SANDBOX_UID}:${SANDBOX_GID} /workspace 2>/dev/null || true`;
@@ -614,8 +613,8 @@ export class SessionHandle {
     };
 
     // Cancellation: aborting the signal or hitting the timeout stops
-    // the container, which terminates the exec. Slice 10 may revisit
-    // for finer-grained `docker exec --signal` style termination.
+    // the container, which terminates the exec. Future revisits could
+    // adopt finer-grained `docker exec --signal` style termination.
     let timeoutHandle: NodeJS.Timeout | undefined;
     const cancel = (reason: string): void => {
       // Best-effort container stop; do not await so we don't deadlock
@@ -721,9 +720,9 @@ export class SessionHandle {
       // fires, the daemon's internal exec state may not have updated
       // yet — `inspect.ExitCode` can briefly be `null` for a few ms
       // after the child terminates. Poll a small number of times with
-      // short delays before falling back to -1. Practical experience
-      // (Slice 8 Task 2 smoke) shows ExitCode is populated within
-      // 1–2 polls on Docker Desktop; the cap is a safety net.
+      // short delays before falling back to -1. In practice ExitCode
+      // is populated within 1–2 polls on Docker Desktop; the cap is a
+      // safety net.
       let inspect = await exec.inspect();
       let pollAttempt = 0;
       while (inspect.ExitCode === null && pollAttempt < 10 && inspect.Running !== true) {

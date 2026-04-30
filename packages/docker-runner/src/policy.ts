@@ -50,10 +50,11 @@ import type Docker from "dockerode";
 /**
  * The locked uid/gid the agent runs as inside any sandbox container. Per
  * REQUIREMENTS.md "What goes in the runtime sandbox image" and
- * ADR-001 "container runs as a non-root user (UID 10001)". Slice 11's
- * published image will bake this user into `/etc/passwd`; Slice 5 starts
- * the container with this `User` field directly and the kernel runs
- * processes as the numeric uid even without an `/etc/passwd` entry.
+ * ADR-001 "container runs as a non-root user (UID 10001)". The
+ * published runtime image bakes this user into `/etc/passwd`; the
+ * runner also starts the container with this `User` field directly
+ * so the kernel runs processes as the numeric uid even when an
+ * `/etc/passwd` entry is missing (e.g. against a generic base image).
  */
 export const SANDBOX_UID = 10001 as const;
 export const SANDBOX_GID = 10001 as const;
@@ -144,7 +145,7 @@ export interface ApprovedHostConfig {
   /** Bind mounts in the structured `Mounts` API. */
   Mounts?: readonly ApprovedMount[];
 
-  /** Resource limits — required per Slice 5 kickoff pre-decision 7. */
+  /** Resource limits — required by the policy. */
   Memory: number;
   NanoCpus: number;
   PidsLimit: number;
@@ -259,7 +260,7 @@ export function validateContainerConfig(
   rejectForbiddenBinds(host.Binds);
   rejectForbiddenMounts(host.Mounts);
 
-  // (FC-1018) Slice 8: any bind mount whose target is under `/skills`
+  // (FC-1018) Any bind mount whose target is under `/skills`
   // MUST be read-only. The skills feature relies on the host being
   // the only thing that can write to the skills tree (Flow 7: agent
   // authors skills via `write_file` to /workspace, not /skills). A
@@ -269,10 +270,10 @@ export function validateContainerConfig(
   // contract.
   rejectWritableSkillsMounts(host.Mounts);
 
-  // (FC-1019) Slice 9: validate the `funclaw.session` and
-  // `funclaw.subagent` labels are well-formed when present.
-  // Defensive — the runner constructs these labels from
-  // `crypto.randomUUID()` strings, so this is to catch programmatic
+  // (FC-1019) Validate the `funclaw.session` and `funclaw.subagent`
+  // labels are well-formed when present. Defensive — the runner
+  // constructs these labels from `crypto.randomUUID()` strings, so
+  // this is to catch programmatic
   // callers building a config by hand with mangled label values.
   validateFunclawLabels(raw.Labels);
 
@@ -356,7 +357,7 @@ function rejectWritableSkillsMounts(
 }
 
 /**
- * (FC-1019) Slice 9: validate that the `funclaw.session` and
+ * (FC-1019) Validate that the `funclaw.session` and
  * `funclaw.subagent` labels — when present — carry well-formed
  * values. Both labels carry UUID strings (`crypto.randomUUID()`), and
  * the agent loop / cleanup logic depends on the values being plain

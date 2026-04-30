@@ -7,7 +7,7 @@
 // helper scripts.
 //
 // Reference docs:
-//   - .claude/CLAUDE.md (Slice 8 pre-decisions: instruction-module
+//   - .claude/CLAUDE.md (skill pre-decisions: instruction-module
 //     pattern, three-source discovery precedence).
 //   - REQUIREMENTS.md Flow 3 (skill use), Flow 7 (agent authors
 //     skill via write_file), Flow 8 (third-party agentskills.io

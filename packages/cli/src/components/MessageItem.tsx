@@ -2,9 +2,9 @@
 //
 // Renders user prompts and assistant responses with inline tool calls.
 // Tool calls show as small bordered boxes with a status indicator
-// (○ pending, spinner running, ✓ done, ✗ error). For Slice 6, tool
-// boxes always show their input/output rather than collapsing — the
-// collapse-by-default UX is a Slice 12 polish task.
+// (○ pending, spinner running, ✓ done, ✗ error). Tool boxes always
+// show their input/output rather than collapsing — collapse-by-default
+// UX is deferred polish.
 
 import { Box, Text } from "ink";
 import { Spinner } from "./Spinner.js";

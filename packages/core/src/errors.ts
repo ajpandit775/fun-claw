@@ -1,11 +1,11 @@
 // Fun Claw error factory.
 //
 // `FunClawError` (the canonical shape) is defined as an interface in
-// `types.ts` per the Slice 1 "pure types only" rule. This file provides
-// the runtime-side counterpart: a factory function `funClawError` that
-// builds a real `Error` instance with the FunClawError fields attached,
-// so the throw site has a useful stack trace AND consumers can read
-// `.code` / `.data` for structured handling.
+// `types.ts` to keep the type-only surface separate from runtime code.
+// This file provides the runtime-side counterpart: a factory function
+// `funClawError` that builds a real `Error` instance with the
+// FunClawError fields attached, so the throw site has a useful stack
+// trace AND consumers can read `.code` / `.data` for structured handling.
 //
 // Usage:
 //

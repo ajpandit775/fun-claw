@@ -6,10 +6,9 @@
 // to know exactly which FC-3xxx codes are live in the codebase.
 //
 // Reference docs:
-//   - .claude/CLAUDE.md "Saved feedback ... Slice 3 — FC-2xxx codes
-//     are scoped narrowly: host-side vs wire-side." Same narrow
-//     specificity carries over to FC-3xxx: distinct user-facing
-//     failure modes get distinct codes.
+//   - .claude/CLAUDE.md "Saved feedback" on FC-code narrow-specificity:
+//     distinct user-facing failure modes get distinct codes (the rule
+//     applies across all FC-Nxxx namespaces, including FC-3xxx).
 
 import { type FunClawError, funClawError } from "@funclaw/core";
 

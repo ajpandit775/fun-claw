@@ -1,20 +1,20 @@
 // Fun Claw agent loop.
 //
 // Pure async generator that drives the LLM ↔ tool dispatch loop per
-// ADR-002. Yields `AgentEvent`s for consumers (the chat TUI in Slice 6,
-// smoke tests, future automation) to render.
+// ADR-002. Yields `AgentEvent`s for consumers (the chat TUI, smoke
+// tests, future automation) to render.
 //
 // One iteration = one LLM call + (optional) parallel tool dispatch.
 // Per ADR-002, the loop has a hard cap of 25 iterations of
 // `stop_reason === "tool_use"` before exiting with FC-6001. Callers can
 // override `maxIterations` via options.
 //
-// AbortSignal is threaded into both `provider.stream()` (Slice 3
-// adapters) and each `ToolHandler` invocation (Slice 5 runner respects
-// the signal in `SessionHandle.exec`). When the caller aborts (Ctrl-C
-// in the TUI), the in-flight LLM stream and any running tool execs
-// terminate cleanly; the loop yields a `turn-stop` with reason
-// `"aborted"` and returns.
+// AbortSignal is threaded into both `provider.stream()` and each
+// `ToolHandler` invocation (the docker-runner respects the signal in
+// `SessionHandle.exec`). When the caller aborts (Ctrl-C in the TUI),
+// the in-flight LLM stream and any running tool execs terminate
+// cleanly; the loop yields a `turn-stop` with reason `"aborted"` and
+// returns.
 //
 // Per ADR-001, every tool result is wrapped in
 // `<tool_result tool="..." id="..." session="...">...</tool_result>`
@@ -72,10 +72,10 @@ const SUBAGENT_CONCURRENCY = 5;
  * routes calls with this name through an additional `pLimit(5)`
  * before the broader `pLimit(10)` to enforce ADR-003's sibling cap.
  *
- * Slice 9 introduced this magic-constant coupling deliberately: the
- * alternative (the spawn_subagent handler self-limiting via a shared
- * mutable counter) is messier and harder to test. Keeping the cap
- * at the dispatch layer keeps the handler pure.
+ * The magic-constant coupling is deliberate: the alternative (the
+ * spawn_subagent handler self-limiting via a shared mutable counter)
+ * is messier and harder to test. Keeping the cap at the dispatch
+ * layer keeps the handler pure.
  */
 export const SPAWN_SUBAGENT_TOOL_NAME = "spawn_subagent";
 
@@ -116,7 +116,7 @@ export interface AgentLoopOptions {
    */
   onMessage?: (message: Message) => void;
   /**
-   * Recursion depth (Slice 9, per ADR-003). Root chat sessions pass 0
+   * Recursion depth (per ADR-003). Root chat sessions pass 0
    * (or omit). Subagent invocations pass `parentDepth + 1`. The
    * runAgentLoop function uses depth purely for diagnostic logging
    * and to confirm callers built the correct registry — the actual
@@ -187,9 +187,9 @@ export async function* runAgentLoop(opts: AgentLoopOptions): AsyncIterable<Agent
     yield { type: "turn-start", iteration };
 
     // Build the per-turn stream options. `tools` is a snapshot at this
-    // turn — registries can theoretically grow between turns (Slice 7
-    // MCP / Slice 8 skills may add tools dynamically), and re-reading
-    // each turn ensures the LLM sees the current set.
+    // turn — registries can theoretically grow between turns (MCP and
+    // skill tools may be added dynamically), and re-reading each turn
+    // ensures the LLM sees the current set.
     const streamOpts: StreamOptions = {
       messages,
       model: opts.model,
@@ -262,8 +262,8 @@ export async function* runAgentLoop(opts: AgentLoopOptions): AsyncIterable<Agent
         }
       }
     } catch (err) {
-      // Slice 9: distinguish "stream threw because the abort signal
-      // fired" from "stream threw for another reason." Real provider
+      // Distinguish "stream threw because the abort signal fired"
+      // from "stream threw for another reason." Real provider
       // SDKs propagate AbortError out of the underlying fetch when
       // their abortSignal fires; we want that path classified as a
       // clean abort, not as an FC-9999 error. The signal-aborted

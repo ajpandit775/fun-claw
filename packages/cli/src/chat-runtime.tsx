@@ -10,7 +10,7 @@
 // at the dynamic-import boundary.
 //
 // Reference docs:
-//   - .claude/CLAUDE.md (Slice 6 Task 2 ink-ESM-CJS feedback entry).
+//   - .claude/CLAUDE.md (saved feedback on the ink-ESM-CJS bridge).
 //   - docs/adr/ADR-001-trust-boundaries.md (LLM is semi-trusted; tool
 //     output is adversarial — the system prompt + agent loop's wrap
 //     handle this layer).
@@ -225,8 +225,8 @@ interface ChatSessionProps {
   /** Called when the user double-taps Ctrl-C to exit the app. */
   exit: () => void;
   /**
-   * Slice 9: per-turn usage callback, invoked once per turn-stop
-   * event that carries usage metadata. The chat command uses this to
+   * Per-turn usage callback, invoked once per turn-stop event that
+   * carries usage metadata. The chat command uses this to
    * accumulate root-level token totals for the chat-exit diagnostic
    * (per ADR-003, "tokens charge to root"). Optional — when omitted,
    * usage flows past silently.
@@ -280,10 +280,10 @@ function ChatSession(props: ChatSessionProps): React.ReactElement {
               messagesRef.current.push(message);
             },
           })) {
-            // Slice 9: surface per-turn usage to the chat command's
-            // root-token aggregator, if it provided a callback. Done
-            // INSIDE the loop iteration so usage flows even when the
-            // caller doesn't care about other event types.
+            // Surface per-turn usage to the chat command's root-token
+            // aggregator, if it provided a callback. Done INSIDE the
+            // loop iteration so usage flows even when the caller
+            // doesn't care about other event types.
             if (event.type === "turn-stop" && event.usage !== undefined) {
               props.onTurnUsage?.(event.usage);
             }
@@ -352,7 +352,7 @@ export interface StartChatTuiOptions {
   model: string;
   sessionUuid: string;
   logger: FunClawLogger;
-  /** Slice 9: per-turn usage callback for root-token aggregation.
+  /** Per-turn usage callback for root-token aggregation.
    *  Called once per agent-loop turn-stop event that carries usage. */
   onTurnUsage?: (usage: { inputTokens: number; outputTokens: number }) => void;
 }

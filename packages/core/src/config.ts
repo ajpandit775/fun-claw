@@ -16,8 +16,8 @@
 // putting `[secrets]` in `funclaw.config.toml` triggers `.strict()`
 // rejection, caught and re-thrown as `FC-2003` with an actionable message.
 // The keyfile schema is `FullConfigSchema.pick({ secrets: true })` — same
-// source-of-truth Zod parent type, two narrow consumers. See the
-// 2026-04-28 "Slice 2, Q2" CLAUDE.md feedback entry for the rationale.
+// source-of-truth Zod parent type, two narrow consumers. The "no
+// secrets in TOML" rationale is documented in CLAUDE.md saved feedback.
 //
 // Reference docs:
 //   - .claude/CLAUDE.md (Error handling contract; FC-2xxx, FC-5xxx)
@@ -63,8 +63,7 @@ export const LogLevelSchema = z.enum(["fatal", "error", "warn", "info", "debug",
 /**
  * Per-server MCP configuration. Keyed by user-chosen server name in
  * the parent `mcp` object (server name is the table key in TOML, the
- * object key in JSON / JS). The shape is locked by the Slice 7
- * kickoff:
+ * object key in JSON / JS):
  *
  *   - `command` is required: the executable to spawn for stdio
  *     transport.
@@ -76,10 +75,9 @@ export const LogLevelSchema = z.enum(["fatal", "error", "warn", "info", "debug",
  *   - `enabled` defaults to `true`. Lets users temporarily disable
  *     a server without removing the table.
  *
- * Per the Slice 7 saved-feedback rule, transport is stdio-only for
- * v1; HTTP/SSE/WebSocket are `[v2-or-never]` so there is no
- * `transport` field here. Adding one would imply a commitment we
- * have not made.
+ * Transport is stdio-only for v1; HTTP/SSE/WebSocket are
+ * `[v2-or-never]` so there is no `transport` field here. Adding one
+ * would imply a commitment we have not made.
  */
 export const McpServerConfigSchema = z
   .object({
@@ -100,8 +98,8 @@ export type McpServerConfig = z.infer<typeof McpServerConfigSchema>;
  * accepted; a poor choice is the user's choice.
  *
  * `z.record` with a string-typed key (not an enum) is the right
- * shape here per the Slice 2 saved-feedback entry: enum-keyed
- * records are total in Zod 4, but string-keyed records are partial.
+ * shape here: enum-keyed records are total in Zod 4, but string-keyed
+ * records are partial.
  */
 export const McpConfigSchema = z.record(z.string().min(1), McpServerConfigSchema);
 export type McpConfig = z.infer<typeof McpConfigSchema>;
@@ -147,7 +145,7 @@ const FullConfigSchema = z
     endpoint: z.string().url().optional(),
     /**
      * Optional MCP server table. Empty / missing means no MCP servers
-     * — that's fine, MCP is opt-in (per Slice 7 kickoff). The shape is
+     * — that's fine, MCP is opt-in. The shape is
      * `{ [serverName]: McpServerConfig }`; users author this in TOML as
      * `[mcp.<name>]` tables.
      */
@@ -300,9 +298,8 @@ let windowsAclWarningEmitted = false;
  *   1. The provider's standard env var (`ANTHROPIC_API_KEY`, etc.).
  *   2. `~/.funclaw/keys.json` (or `options.keyfilePath`).
  *
- * Per the Slice 2 Q2 decision (CLAUDE.md saved feedback), the user-config
- * TOML is **not** a secret source — secrets cannot be set there. This
- * function strictly checks env then keyfile.
+ * The user-config TOML is **not** a secret source — secrets cannot be
+ * set there. This function strictly checks env then keyfile.
  *
  * Throws `FunClawError` with the appropriate code on failure:
  *   - `FC-2001` — no key found in env or keyfile
@@ -423,9 +420,7 @@ export function getDefaultUserConfigPath(): string {
   // env-paths resolves to `%APPDATA%\funclaw-nodejs\Config\` on
   // Windows, `~/Library/Application Support/funclaw-nodejs/Config/`
   // on macOS, and `$XDG_CONFIG_HOME/funclaw-nodejs/` on Linux.
-  // Verified end-to-end on Windows through Slice 7 inline test +
-  // Slice 10's doctor deliverable run; see
-  // `docs/cross-platform.md`.
+  // Verified end-to-end on Windows; see `docs/cross-platform.md`.
   const paths = envPaths("funclaw");
   return path.join(paths.config, "config.toml");
 }

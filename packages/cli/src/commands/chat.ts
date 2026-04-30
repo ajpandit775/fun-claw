@@ -4,29 +4,29 @@
 // runtime dependencies. The actual TUI rendering lives in
 // `packages/cli/src/chat-runtime.tsx` (ESM, separate tsup entry) — we
 // dynamic-import it at action time because ink 5.x is ESM-only with
-// top-level await and cannot be `require()`d from CJS. See the Slice 6
-// Task 2 saved-feedback entry in CLAUDE.md for the architectural why.
+// top-level await and cannot be `require()`d from CJS. See CLAUDE.md
+// saved feedback for the architectural why.
 //
 // Wiring order:
 //   1. loadConfig() — resolve provider + model + workingDir + endpoint
 //      + mcp.
 //   2. createProvider() — calls getSecret() internally; bails with
 //      FC-2001 / FC-2002 / FC-2007 on key problems.
-//   3. discoverSkills() (Slice 8): walk the three sources
-//      (bundled / user / project) and resolve the per-session skill
-//      set. Per-skill parse failures are logged warnings (FC-4xxx)
-//      and skipped; they do not abort the chat session.
+//   3. discoverSkills(): walk the three sources (bundled / user /
+//      project) and resolve the per-session skill set. Per-skill
+//      parse failures are logged warnings (FC-4xxx) and skipped; they
+//      do not abort the chat session.
 //   4. DockerRunner.ensureImage() — pulls the runtime sandbox image if
 //      not cached. FC-1001 if Docker is unreachable; FC-1022 if pull
 //      fails.
-//   5. MCP startup (Slice 7): for each enabled `[mcp.<name>]` server,
-//      spawn via McpClient.connect, register its tools in the
-//      registry. Per-server failures are logged warnings (FC-3xxx);
-//      they do not abort the chat session.
+//   5. MCP startup: for each enabled `[mcp.<name>]` server, spawn via
+//      McpClient.connect, register its tools in the registry.
+//      Per-server failures are logged warnings (FC-3xxx); they do not
+//      abort the chat session.
 //   6. DockerRunner.createSession() — labels container with the chat
-//      session UUID for Slice 10 doctor cleanup; runs the one-time
+//      session UUID for `funclaw doctor` cleanup; runs the one-time
 //      uid-10001 setup; mounts each discovered skill at
-//      `/skills/<name>` read-only (Slice 8).
+//      `/skills/<name>` read-only.
 //   7. ToolRegistry already has MCP tools from step 5; register
 //      `execute_bash`, `write_file`, and one `skill__<name>` tool per
 //      discovered skill against the live session handle.
@@ -107,12 +107,11 @@ interface ActiveMcpServer {
   name: string;
   client: McpClient;
   /**
-   * Slice 9: the registered (definition, handler) entries for this
-   * server. Captured here at connect time so subagent registries
-   * can re-register the same handlers — the handlers close over the
-   * shared McpClient (stdio MCP servers are singletons per chat
-   * session per the Slice 7 lock), so subagents and the parent all
-   * dispatch through the same client instance.
+   * The registered (definition, handler) entries for this server.
+   * Captured at connect time so subagent registries can re-register
+   * the same handlers — the handlers close over the shared McpClient
+   * (stdio MCP servers are singletons per chat session), so subagents
+   * and the parent all dispatch through the same client instance.
    */
   entries: readonly McpRegistrationEntry[];
 }
@@ -161,8 +160,8 @@ async function runChatCommand(logger: FunClawLogger): Promise<void> {
 
   logger.info({ provider: config.provider, model, image }, "chat command starting");
 
-  // Discover skills (Slice 8) before any heavy work. Per-skill parse
-  // failures are warning-only inside discoverSkills and don't throw.
+  // Discover skills before any heavy work. Per-skill parse failures
+  // are warning-only inside discoverSkills and don't throw.
   const discoveredSkills: DiscoveredSkill[] = await discoverSkills({ logger });
   logger.info(
     {
@@ -231,10 +230,10 @@ async function runChatCommand(logger: FunClawLogger): Promise<void> {
   };
   registry.register(executeBashTool, executeBashHandler);
 
-  // Register `write_file` (Slice 8). Same closure pattern as
-  // execute_bash; the handler runs inside the same container. Path
-  // traversal protection lives in the tool's `resolveWriteFilePath`
-  // helper and produces FC-1030 / FC-1031 / FC-1032 on rejection.
+  // Register `write_file`. Same closure pattern as execute_bash; the
+  // handler runs inside the same container. Path traversal
+  // protection lives in the tool's `resolveWriteFilePath` helper and
+  // produces FC-1030 / FC-1031 / FC-1032 on rejection.
   const writeFileHandler: ToolHandler = async (toolCall, _context, signal) => {
     const input = parseWriteFileInput(toolCall.input);
     return runWriteFile(sessionHandle, input, toolCall.id, { abortSignal: signal });
@@ -242,14 +241,14 @@ async function runChatCommand(logger: FunClawLogger): Promise<void> {
   registry.register(writeFileTool, writeFileHandler);
 
   // Register one `skill__<name>` tool per discovered skill. The
-  // handler returns the skill's markdown body verbatim (per the
-  // Slice 8 instruction-module pattern — the agent reads the body
-  // and acts on it, typically by running the skill's scripts via
+  // handler returns the skill's markdown body verbatim (the
+  // "instruction module" pattern — the agent reads the body and acts
+  // on it, typically by running the skill's scripts via
   // execute_bash).
   registerSkillTools(registry, discoveredSkills);
 
   // ---------------------------------------------------------------
-  // Slice 9: spawn_subagent at depth 0 + subagent runtime factory
+  // spawn_subagent at depth 0 + subagent runtime factory
   // ---------------------------------------------------------------
   //
   // The factory captures (runner, rootSessionUuid, skillsMounts,
@@ -420,11 +419,11 @@ async function runChatCommand(logger: FunClawLogger): Promise<void> {
       },
     });
   } finally {
-    // Cleanup order (Slice 9): subagent containers first (so any
-    // mid-flight subagents from a not-yet-completed spawn_subagent
-    // call still get cleaned up), then MCP servers, then the root
-    // Docker session. Each loop swallows individual errors so a
-    // single failure doesn't block downstream teardown.
+    // Cleanup order: subagent containers first (so any mid-flight
+    // subagents from a not-yet-completed spawn_subagent call still
+    // get cleaned up), then MCP servers, then the root Docker
+    // session. Each loop swallows individual errors so a single
+    // failure doesn't block downstream teardown.
     if (activeSubagents.length > 0) {
       logger.info(
         { liveSubagents: activeSubagents.length },
@@ -456,9 +455,9 @@ async function runChatCommand(logger: FunClawLogger): Promise<void> {
     await runner.destroySession(sessionHandle);
 
     // Per ADR-003: tokens charge to root for cost accounting. Log
-    // an aggregate at exit so users see the true cost of the
-    // chat. Slice 9 keeps this diagnostic-only — Slice 10 polish
-    // may add a hard budget cap on the aggregate.
+    // an aggregate at exit so users see the true cost of the chat.
+    // Diagnostic-only for now — a hard budget cap on the aggregate
+    // is deferred polish.
     const totalInput = usageTotals.rootInputTokens + usageTotals.subagentInputTokens;
     const totalOutput = usageTotals.rootOutputTokens + usageTotals.subagentOutputTokens;
     logger.info(
@@ -575,10 +574,11 @@ async function connectAllMcpServers(
 
       active.push({ name: serverName, client, entries });
     } catch (err) {
-      // Per Slice 7 kickoff: per-server failures log a warning and
-      // continue. Distinguish FunClawError (we threw it intentionally
-      // with a code) from anything else (unexpected; surface as
-      // FC-9999 wrapped log).
+      // Per-server failures log a warning and continue (the chat
+      // session keeps going without that server's tools).
+      // Distinguish FunClawError (we threw it intentionally with a
+      // code) from anything else (unexpected; surface as FC-9999
+      // wrapped log).
       if (isFunClawError(err)) {
         logger.warn(
           { serverName, code: err.code, err },
@@ -611,12 +611,12 @@ async function connectAllMcpServers(
 }
 
 /**
- * Register one `skill__<name>` tool per discovered skill (Slice 8).
- * Each handler returns the skill's markdown body verbatim — the
- * "instruction module" pattern from the Slice 8 saved feedback.
- * Skills are registered AFTER MCP and the built-in tools so any
- * collision (an MCP server that picked a name colliding with a
- * skill) surfaces as FC-6004 here, not silently overwriting.
+ * Register one `skill__<name>` tool per discovered skill. Each
+ * handler returns the skill's markdown body verbatim — the
+ * "instruction module" pattern. Skills are registered AFTER MCP and
+ * the built-in tools so any collision (an MCP server that picked a
+ * name colliding with a skill) surfaces as FC-6004 here, not
+ * silently overwriting.
  */
 function registerSkillTools(
   registry: ToolRegistry,

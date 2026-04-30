@@ -168,10 +168,10 @@ export class GeminiProvider implements LLMProvider {
     let synthIdCounter = 0;
     // Gemini reports finishReason: "STOP" even when the turn ends with a
     // function call (the tool call IS the model's complete output). The
-    // agent loop in Slice 6 checks `stopReason === "tool_use"` to decide
-    // whether to dispatch tools and loop, so we override "end_turn" to
-    // "tool_use" when any tool-use-stop has fired in this stream. See
-    // CLAUDE.md saved feedback for the rationale.
+    // agent loop checks `stopReason === "tool_use"` to decide whether to
+    // dispatch tools and loop, so we override "end_turn" to "tool_use"
+    // when any tool-use-stop has fired in this stream. See CLAUDE.md
+    // saved feedback for the rationale.
     let toolUseEmittedThisStream = false;
 
     try {

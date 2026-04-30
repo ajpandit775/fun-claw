@@ -1,18 +1,15 @@
 // Public surface of @funclaw/core.
 //
-// Slice 2 added the structured logger and the configuration / secret-
-// loading module. Slice 3 added the LLM provider abstraction. Slice 6
-// adds the agent loop, system-prompt builder, and tool registry — the
-// pure-logic side of the chat REPL. The chat command's TUI lives in
-// `@funclaw/cli`.
+// The pure-logic side of Fun Claw lives here: agent loop, message
+// types, provider abstraction, dispatcher, structured logger, and
+// configuration. The chat command's TUI lives in `@funclaw/cli`.
 //
 // Named re-exports (alphabetical within each block) so the public API
-// surface is explicit. Per CLAUDE.md saved feedback, when you add a
-// new public name to a sibling module, also add it to one of the lists
-// below. Relative re-exports include `.js` extensions because tsconfig
-// uses `module: NodeNext`.
+// surface is explicit. When you add a new public name to a sibling
+// module, also add it to one of the lists below. Relative re-exports
+// include `.js` extensions because tsconfig uses `module: NodeNext`.
 
-// Agent loop (Slice 6)
+// Agent loop
 export type { AgentLoopOptions } from "./agent-loop.js";
 export { runAgentLoop } from "./agent-loop.js";
 
@@ -84,7 +81,7 @@ export {
   providerUnavailableError,
 } from "./provider.js";
 
-// System prompt builder (Slice 6 + Slice 8 skills section + Slice 9 subagent framing)
+// System prompt builder (skills + subagent framing)
 export type {
   SubagentPromptContext,
   SystemPromptOptions,
@@ -92,11 +89,11 @@ export type {
 } from "./system-prompt.js";
 export { buildSystemPrompt } from "./system-prompt.js";
 
-// Tool registry (Slice 6 + Slice 7 MCP integration)
+// Tool registry (built-ins + MCP integration)
 export type { McpRegistrationEntry } from "./tool-registry.js";
 export { ToolRegistry } from "./tool-registry.js";
 
-// spawn_subagent built-in (Slice 9, per ADR-003)
+// spawn_subagent built-in (per ADR-003)
 export type {
   SpawnSubagentDeps,
   SpawnSubagentInput,

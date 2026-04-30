@@ -4,8 +4,8 @@
 // precedence order — later sources override earlier ones — and
 // returns the resolved set of skills. Failed skills are logged but
 // don't break discovery: one bad SKILL.md in the user directory
-// shouldn't cause the chat session to fail to start. This mirrors
-// the MCP server failure pattern from Slice 7.
+// shouldn't cause the chat session to fail to start (mirroring the
+// MCP server failure-isolation pattern).
 //
 // Source paths:
 //   - bundled — `<package-root>/bundled/` (relative to this module's
@@ -17,7 +17,7 @@
 //     project-local skills checked into the user's repo).
 //
 // Reference docs:
-//   - .claude/CLAUDE.md (Slice 8 pre-decisions: precedence order
+//   - .claude/CLAUDE.md (skills pre-decisions: precedence order
 //     bundled < user < project).
 //   - REQUIREMENTS.md Flow 8 (third-party skills from agentskills.io
 //     dropped into the user directory).
@@ -179,9 +179,9 @@ function defaultUserSkillsDir(): string {
   // env-paths picks `%LOCALAPPDATA%\funclaw-nodejs\Data\skills` on
   // Windows, `~/Library/Application Support/funclaw-nodejs/Data/skills`
   // on macOS, `$XDG_DATA_HOME/funclaw-nodejs/skills` on Linux.
-  // Discovery verified on Windows through Slice 8 Task 3 manual
-  // smoke (`funclaw skill list` found the test fixture under that
-  // exact path). See `docs/cross-platform.md`.
+  // Discovery verified on Windows through `funclaw skill list`
+  // against a test fixture at this exact path. See
+  // `docs/cross-platform.md`.
   const paths = envPaths("funclaw");
   return path.join(paths.data, "skills");
 }

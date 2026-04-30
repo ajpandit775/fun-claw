@@ -60,7 +60,7 @@ import type { Skill, SkillFrontmatter } from "./types.js";
  * rule: lowercase letters, digits, dash, underscore, leading letter,
  * 1–64 chars.
  *
- * Rationale (from Slice 8 kickoff):
+ * Rationale:
  *   - Lowercase only — prevents Windows-vs-POSIX case sensitivity
  *     ambiguity (Windows treats `Foo` and `foo` as the same path).
  *   - Leading letter — keeps `skill__<name>` tool naming clean for
@@ -81,9 +81,9 @@ const SCRIPTS_SUBDIR = "scripts";
 
 /**
  * Zod schema for SKILL.md frontmatter. `.passthrough()` retains
- * unknown fields per the Slice 8 forward-compat decision —
- * agentskills.io may grow new optional fields and we want existing
- * skills to keep loading. The fields below are the v1 contract.
+ * unknown fields for forward-compatibility — agentskills.io may grow
+ * new optional fields and we want existing skills to keep loading.
+ * The fields below are the v1 contract.
  *
  * `version` defaults to `"0.0.0"` rather than being optional so the
  * downstream `Skill.frontmatter.version` field is non-nullable.

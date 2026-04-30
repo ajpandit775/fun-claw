@@ -22,7 +22,7 @@
 /**
  * The speaker role of a conversation message.
  *
- * Provider notes (the adapters in Slice 3 will normalize each):
+ * Provider notes (the adapters normalize each):
  *   - Anthropic: maps directly.
  *   - OpenAI: tool results normally arrive as `role: "tool"`. The adapter
  *     translates those into our internal `role: "user"` message containing
@@ -114,8 +114,8 @@ export type ContentBlock = TextBlock | ToolUseBlock | ToolResultBlock;
  *
  * `content` is either a plain string (the simple text-only case) or an array
  * of `ContentBlock`s (assistant turns with tool calls, user turns carrying
- * tool results, future multimodal). The provider adapters in Slice 3
- * translate to and from each provider's wire shape.
+ * tool results, future multimodal). The provider adapters translate to
+ * and from each provider's wire shape.
  */
 export interface Message {
   role: Role;
@@ -239,7 +239,7 @@ export type FunClawErrorCode =
  *
  * Per CLAUDE.md "Never log secrets": if you add a field to `data` that may
  * carry a secret, also add the path to the pino redaction list in
- * `packages/core/logger.ts` (Slice 2 work).
+ * `packages/core/logger.ts`.
  */
 export interface FunClawError {
   /** Machine-readable code, e.g. `"FC-1003"`. */
@@ -255,7 +255,7 @@ export interface FunClawError {
 }
 
 // ---------------------------------------------------------------------------
-// Agent loop primitives (Slice 6)
+// Agent loop primitives
 // ---------------------------------------------------------------------------
 
 /**
@@ -280,10 +280,10 @@ export interface AgentUsage {
 export type AgentStopReason = StopReason | "aborted" | "max_iterations";
 
 /**
- * Context passed to every `ToolHandler` invocation. Slice 6 keeps this
- * minimal — only the session UUID, useful for log correlation and for
- * tools that want to embed it in their output. Future slices extend the
- * shape (skills dir for Slice 8, MCP clients for Slice 7).
+ * Context passed to every `ToolHandler` invocation. Minimal by design
+ * — only the session UUID, useful for log correlation and for tools
+ * that want to embed it in their output. Extend the shape with
+ * additional dependencies as new tool categories are added.
  */
 export interface ToolHandlerContext {
   /** UUID of the current chat session. Stable across all tool calls in

@@ -15,8 +15,9 @@
 //      inside any string value, with a depth cap of 8 to defend against
 //      accidentally circular objects.
 //
-// The scrubber's pattern set is locked at three. See the 2026-04-28
-// "Slice 2, Q1" feedback entry in CLAUDE.md before considering changes.
+// The scrubber's pattern set is locked at three. Expanding it risks
+// false positives; see the secret-scrubbing entry in CLAUDE.md saved
+// feedback before considering changes.
 //
 // Reference docs:
 //   - .claude/CLAUDE.md ("Never log secrets", "Error handling contract")
@@ -65,8 +66,7 @@ const REDACT_PATHS: readonly string[] = [
 ];
 
 /**
- * Value-content scrub patterns. Per the Slice 2 Q1 decision (locked in
- * CLAUDE.md saved feedback), exactly three patterns are applied: Bearer
+ * Value-content scrub patterns. Locked at exactly three: Bearer
  * header values, sk-prefixed keys (Anthropic / OpenAI style), and AKIA-
  * prefixed AWS access keys. Do NOT add patterns without explicit maintainer
  * approval — the small set is what avoids false positives.
@@ -147,8 +147,8 @@ export function createLogger(options: LoggerOptions = {}): FunClawLogger {
     // env-paths picks `%LOCALAPPDATA%\funclaw-nodejs\Log` on Windows,
     // `~/Library/Logs/funclaw-nodejs/` on macOS, and
     // `$XDG_STATE_HOME/funclaw-nodejs/log/` on Linux. Verified
-    // writable on Windows through Slice 6/9 chat smokes (the file
-    // log captured the agent loop's events end-to-end). See
+    // writable on Windows through end-to-end chat smokes (the file
+    // log captured the agent loop's events). See
     // `docs/cross-platform.md`.
     fs.mkdirSync(path.dirname(logFilePath), { recursive: true });
     streams.push({

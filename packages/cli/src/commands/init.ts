@@ -1,17 +1,15 @@
 // `funclaw init` — first-run setup wizard.
 //
-// Implementation per the Slice 4 Task 2 brief:
-//   - @clack/prompts intro / group / outro flow.
+// Flow:
+//   - @clack/prompts intro / group / outro.
 //   - Provider select, default-model text, conditional endpoint text
 //     (only for openai-compatible), workingDir text, runtimeImage text,
 //     logLevel select.
 //   - Validate via UserConfigSchema (which includes the superRefine
-//     "endpoint required for openai-compatible" rule landed in this
-//     same task).
+//     "endpoint required for openai-compatible" rule).
 //   - Confirm path before writing; pretty-print TOML via smol-toml.
-//   - Best-effort Docker daemon check (the kickoff explicitly says
-//     `via execa` for this slice; full doctor checks via dockerode are
-//     Slice 10's job).
+//   - Best-effort Docker daemon check via `docker info` through execa
+//     (full diagnostic checks belong in `funclaw doctor`).
 //   - Outro that explains how to set the API key (env var or keyfile)
 //     and optionally pre-creates the keyfile + opens it in the user's
 //     editor.
@@ -271,8 +269,8 @@ export async function runInitWizard(logger: FunClawLogger): Promise<void> {
 
 /**
  * Write a validated `UserConfig` to a TOML file at `filePath`. Creates
- * the parent directory if needed. Exposed for the Slice 4 round-trip
- * smoke test; the wizard above is the production caller.
+ * the parent directory if needed. Exposed for round-trip smoke
+ * testing; the wizard above is the production caller.
  */
 export async function writeConfigToml(
   filePath: string,
@@ -295,11 +293,11 @@ export async function writeConfigToml(
 }
 
 /**
- * Best-effort Docker daemon reachability check via `execa`. Per the
- * kickoff this is intentionally lightweight — full doctor checks via
- * dockerode are Slice 10's job. STACK.md's "spawning docker CLI as a
- * subprocess" prohibition is for sandbox/container operations; a
- * version probe is outside that scope.
+ * Best-effort Docker daemon reachability check via `execa`.
+ * Intentionally lightweight — full diagnostic checks live in
+ * `funclaw doctor`. STACK.md's "spawning docker CLI as a subprocess"
+ * prohibition is for sandbox/container operations; a version probe
+ * is outside that scope.
  */
 async function dockerCheck(logger: FunClawLogger): Promise<void> {
   const s = spinner();
@@ -364,7 +362,7 @@ async function createAndOpenKeyfile(
   // keyfile ACLs via Properties → Security; see
   // `docs/cross-platform.md` for the cross-platform notes.
   //
-  // Edge cases the wizard handles gracefully (Slice 10 polish):
+  // Edge cases the wizard handles gracefully:
   //   - parent directory missing: `mkdirSync({ recursive: true })`.
   //   - keyfile already exists: skip creation, open as-is.
   //   - keyfile path is a directory (rare misconfig): existsSync
@@ -424,10 +422,9 @@ async function createAndOpenKeyfile(
       // `start` is a cmd builtin — invoking it via `cmd /c start ""
       // <path>` opens the file with its default Windows handler,
       // which respects the user's editor association if they've set
-      // one. Verified in the Slice 4 init smoke + manual run on the
-      // maintainer's Windows machine. The empty `""` is the window
-      // title arg (omitting it would make `start` interpret a path
-      // with spaces as the title).
+      // one. The empty `""` is the window title arg (omitting it
+      // would make `start` interpret a path with spaces as the
+      // title).
       await execa("cmd", ["/c", "start", "", keyfilePath]);
     } else {
       await execa("xdg-open", [keyfilePath]);

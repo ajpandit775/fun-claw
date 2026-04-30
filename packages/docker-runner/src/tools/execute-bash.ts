@@ -7,13 +7,13 @@
 //
 // Per ADR-001, command output is adversarial input on the next turn.
 // The handler does NOT escape, sanitize, or otherwise modify output —
-// that's the agent loop's job in Slice 6 (it wraps the content in
+// that's the agent loop's job (it wraps the content in
 // `<tool_result name="execute_bash">…</tool_result>` boundary markers
 // before it reaches the LLM).
 //
 // Per ADR-002, throws inside the handler are caught at the dispatcher
-// boundary in Slice 6 and converted to `ToolResult { isError: true }`.
-// The handler may throw `FunClawError` freely.
+// boundary and converted to `ToolResult { isError: true }`. The
+// handler may throw `FunClawError` freely.
 //
 // Reference docs:
 //   - .claude/CLAUDE.md "Error handling contract".
@@ -87,11 +87,10 @@ export const executeBashTool: ToolDefinition = {
 // ---------------------------------------------------------------------------
 
 /**
- * Validate and normalize raw tool input. Throws a `ZodError` (which the
- * dispatcher in Slice 6 will convert to a `ToolResult` with
- * `isError: true`) if the shape is wrong. Exposed so callers can
- * pre-validate before deciding between the sync and streaming
- * handlers.
+ * Validate and normalize raw tool input. Throws a `ZodError` (which
+ * the dispatcher converts to a `ToolResult` with `isError: true`) if
+ * the shape is wrong. Exposed so callers can pre-validate before
+ * deciding between the sync and streaming handlers.
  */
 export function parseExecuteBashInput(raw: unknown): ExecuteBashInput {
   return ExecuteBashInputSchema.parse(raw);
@@ -159,7 +158,7 @@ export async function runExecuteBashSync(
 
 /**
  * Streaming handler: returns the raw `AsyncIterable<ExecStreamEvent>`
- * from `SessionHandle.exec` so consumers (e.g., Slice 6's TUI) can
+ * from `SessionHandle.exec` so consumers (e.g., the chat TUI) can
  * render stdout as it arrives. The same underlying call backs the
  * sync handler.
  */

@@ -1,12 +1,11 @@
 // Root component for the chat TUI.
 //
-// Slice 6 Task 2 keeps this a pure presentation component: it accepts
-// `messages`, `status`, and `onUserSubmit` as props and renders the
-// three regions (scrollback, status bar, input). The actual agent loop
-// wiring — translating `AgentEvent`s into messages, dispatching tools,
-// managing the AbortController — lives in the chat command (Task 3),
-// not here. This split keeps the TUI testable in isolation with
-// hardcoded fixtures.
+// Pure presentation component: accepts `messages`, `status`, and
+// `onUserSubmit` as props and renders the three regions (scrollback,
+// status bar, input). The actual agent loop wiring — translating
+// `AgentEvent`s into messages, dispatching tools, managing the
+// AbortController — lives in the chat command, not here. The split
+// keeps the TUI testable in isolation with hardcoded fixtures.
 //
 // The root component owns only the local input-buffer state. All other
 // state (messages, status, iteration) is lifted to the chat command
@@ -46,9 +45,9 @@ export function ChatApp({
   const { exit } = useApp();
 
   // Capture Ctrl-C at the ink layer. The chat command's process-level
-  // SIGINT handler also fires per Slice 4's signal feedback, but ink
-  // intercepts raw keypresses before they hit the OS in some terminals
-  // — handling here keeps the UX consistent across both paths.
+  // SIGINT handler also fires, but ink intercepts raw keypresses
+  // before they hit the OS in some terminals — handling here keeps
+  // the UX consistent across both paths.
   useInput((_input, key) => {
     if (key.ctrl && _input === "c") {
       if (onInterrupt !== undefined) {

@@ -1,11 +1,11 @@
 // Public types for `@funclaw/mcp-client`.
 //
-// Slice 7 introduces MCP integration. The shapes here are the surface
-// area consumed by the chat command (`packages/cli/src/commands/chat.ts`)
-// and the tool registry (`packages/core/src/tool-registry.ts`).
+// The shapes here are the surface area consumed by the chat command
+// (`packages/cli/src/commands/chat.ts`) and the tool registry
+// (`packages/core/src/tool-registry.ts`).
 //
 // Reference docs:
-//   - .claude/CLAUDE.md (Slice 7 pre-decisions: stdio-only, prefix
+//   - .claude/CLAUDE.md (MCP pre-decisions: stdio-only, prefix
 //     format, server-failure isolation, FC-3xxx allocation).
 //   - REQUIREMENTS.md Flow 4 (MCP server configuration shape).
 //   - docs/adr/ADR-001-trust-boundaries.md ("MCP servers run on the
@@ -18,7 +18,7 @@ import type { ToolDefinition } from "@funclaw/core";
  * `funclaw.config.toml` under `[mcp.<name>]` tables. The server name
  * (the table key) is supplied separately by the caller.
  *
- * Reflects the locked Slice 7 schema:
+ * Schema:
  *   - `command` is required: the executable to spawn.
  *   - `args` is optional: extra argv items.
  *   - `env` is optional: env vars merged ON TOP OF the parent's env

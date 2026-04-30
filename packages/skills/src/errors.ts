@@ -5,17 +5,16 @@
 // below are the canonical construction sites — search for these names
 // to know exactly which FC-4xxx codes are live in the codebase.
 //
-// Note: FC-4005 (skill name conflict) is reserved by the Slice 8
-// kickoff but unused in source — discovery precedence resolves
-// same-named skills to the highest source rather than throwing. The
-// code stays reserved so future changes that genuinely surface a
-// conflict (e.g., two skills with different storage paths but the
-// same resolved name in the same source) can claim it without
-// renumbering.
+// Note: FC-4005 (skill name conflict) is reserved but unused in
+// source — discovery precedence resolves same-named skills to the
+// highest source rather than throwing. The code stays reserved so
+// future changes that genuinely surface a conflict (e.g., two
+// skills with different storage paths but the same resolved name in
+// the same source) can claim it without renumbering.
 //
 // Reference docs:
-//   - .claude/CLAUDE.md "Saved feedback" — Slice 3 narrow-specificity
-//     pattern carries over to FC-4xxx.
+//   - .claude/CLAUDE.md "Saved feedback" — narrow-specificity
+//     pattern applies across all FC-Nxxx namespaces.
 
 import { type FunClawError, funClawError } from "@funclaw/core";
 
@@ -104,9 +103,9 @@ export function nameMismatchError(args: {
 }
 
 /**
- * FC-4005 — Skill name conflict. RESERVED by Slice 8 but unused —
- * discovery precedence (project > user > bundled) resolves same-named
- * skills automatically rather than throwing. Kept reserved so future
+ * FC-4005 — Skill name conflict. RESERVED but unused — discovery
+ * precedence (project > user > bundled) resolves same-named skills
+ * automatically rather than throwing. Kept reserved so future
  * conflicting-skill scenarios have a code without renumbering.
  *
  * @internal Construction site exposed only for tests / future use.

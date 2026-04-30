@@ -1,8 +1,8 @@
 // Fun Claw CLI entry point.
 //
-// Commander 14 root. Five subcommands registered: `init` (the only one
-// fully implemented in Slice 4), plus `chat`, `doctor`, `skill`, and
-// `mcp` as warm-but-honest stubs that announce which slice they land in.
+// Commander 14 root. Five subcommands registered: `init`, `chat`,
+// `doctor`, `skill`, and `mcp` (currently a stub pointing users at
+// TOML configuration + `funclaw doctor`).
 //
 // Top-level concerns owned here:
 //   - Pre-parse `--debug` / `--trace` / `--quiet` before commander

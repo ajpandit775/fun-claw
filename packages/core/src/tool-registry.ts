@@ -5,11 +5,11 @@
 // and `ToolHandler` (invoked by the agent loop's dispatcher).
 //
 // Not a singleton: the chat command constructs a registry per session
-// and registers the tools that session needs (Slice 6: just
-// `execute_bash`; Slice 7 adds MCP-namespaced tools; Slice 8 adds skill
-// scripts and `write_file`; Slice 9 adds `spawn_subagent`). Different
+// and registers the tools that session needs — built-ins
+// (`execute_bash`, `write_file`, `spawn_subagent`), MCP-namespaced
+// tools, and one `skill__<name>` per discovered skill. Different
 // commands can register different tool sets — `funclaw skill validate`
-// (Slice 8) might register no tools at all.
+// might register no tools at all.
 //
 // Reference docs:
 //   - docs/adr/ADR-002-tool-dispatch.md (the agent loop iterates the

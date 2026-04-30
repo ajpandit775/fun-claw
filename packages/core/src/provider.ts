@@ -1,8 +1,7 @@
 // Fun Claw LLM provider abstraction.
 //
 // This module is the contract every provider adapter implements
-// (`AnthropicProvider`, `OpenAIProvider`, `GeminiProvider` in subsequent
-// Slice 3 tasks). It owns:
+// (`AnthropicProvider`, `OpenAIProvider`, `GeminiProvider`). It owns:
 //
 //   1. The `LLMProvider` interface — the single shape the agent loop and
 //      dispatcher consume. Adapters wrap each provider's native SDK and

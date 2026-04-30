@@ -1,15 +1,13 @@
 // Public surface of @funclaw/docker-runner.
 //
-// Slice 5 introduces the docker-runner package: the security policy,
-// the `DockerRunner` lifecycle wrapper, and the first concrete tool
-// (`execute_bash`). Slice 6's agent loop and Slice 8's skill scripts
-// are the primary consumers; Slice 10's doctor consumes
-// `listOrphanedSessions`.
+// The Docker sandbox lifecycle: security policy, the `DockerRunner`
+// class, and the built-in tools (`execute_bash`, `write_file`).
+// Primary consumers are the agent loop in `@funclaw/core` and the
+// `funclaw doctor` command (which uses `listOrphanedSessions`).
 //
 // Named re-exports (alphabetical within each block) so the public API
-// surface is explicit. Per the saved-feedback rule, when adding a new
-// public name to a sibling module, also add it to one of the lists
-// below.
+// surface is explicit. When adding a new public name to a sibling
+// module, also add it to one of the lists below.
 
 // Policy types and constants
 export type {

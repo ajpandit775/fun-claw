@@ -1,13 +1,14 @@
 // Public surface of `@funclaw/mcp-client`.
 //
-// Slice 7 introduces the MCP integration. Per CLAUDE.md "Slice 1,
-// Task 3 saved feedback", the barrel uses explicit named re-exports
-// so private helpers in sibling modules don't leak into the public
-// API by accident. When you add a new public name, also add it here.
+// MCP (Model Context Protocol) integration: lifecycle, transport
+// selection, namespacing on top of `@modelcontextprotocol/sdk`. The
+// barrel uses explicit named re-exports so private helpers in sibling
+// modules don't leak into the public API by accident. When you add a
+// new public name, also add it here.
 //
 // Reference docs:
-//   - .claude/CLAUDE.md (slice plan; saved feedback for barrel
-//     re-export discipline; Slice 7 pre-decisions).
+//   - .claude/CLAUDE.md (saved feedback for barrel re-export
+//     discipline; MCP pre-decisions).
 
 // Adapter helpers (translate MCP wire shapes ↔ Fun Claw shapes)
 export {

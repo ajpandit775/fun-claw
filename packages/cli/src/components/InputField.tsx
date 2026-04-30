@@ -2,9 +2,8 @@
 //
 // Wraps `ink-text-input` with a colored prompt prefix. When the chat
 // is busy (thinking / running tools), the input is disabled and shows
-// a dimmed placeholder rather than the live editor. Slice 6 is single-
-// line only; multiline is a Slice 12 polish task per the maintainer
-// feedback entry.
+// a dimmed placeholder rather than the live editor. Single-line only
+// for now; multiline is deferred polish.
 
 import { Box, Text } from "ink";
 // ink-text-input ships its own types but the default export shape varies

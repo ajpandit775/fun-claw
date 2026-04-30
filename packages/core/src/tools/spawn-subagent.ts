@@ -1,9 +1,9 @@
-// Fun Claw — spawn_subagent tool (Slice 9, per ADR-003).
+// Fun Claw — spawn_subagent tool (per ADR-003).
 //
-// This is the third built-in tool, joining `execute_bash` (Slice 5)
-// and `write_file` (Slice 8). Where execute_bash and write_file live
-// in `@funclaw/docker-runner` (because they bind to a SessionHandle),
-// spawn_subagent lives here in `@funclaw/core` because:
+// This is the third built-in tool, joining `execute_bash` and
+// `write_file`. Where those two live in `@funclaw/docker-runner`
+// (because they bind to a SessionHandle), spawn_subagent lives here
+// in `@funclaw/core` because:
 //   - It dispatches a NEW agent loop, which is core territory.
 //   - It needs no Docker dependency at the type level — the runner
 //     dependency is injected via a `SubagentRunnerFactory` callback.
@@ -34,7 +34,7 @@
 //     can aggregate "tokens charge to root" per ADR-003.
 //
 // Reference docs:
-//   - .claude/CLAUDE.md (Slice 9 pre-decisions; FC-6xxx code policy).
+//   - .claude/CLAUDE.md (subagent pre-decisions; FC-6xxx code policy).
 //   - docs/adr/ADR-003-subagent-isolation.md (in-process, separate
 //     container; depth ≤ 3, ≤ 5 siblings, 50K input tokens, 15
 //     iterations, 300s wall clock; tokens charge to root).
@@ -80,11 +80,11 @@ export const SUBAGENT_MAX_DEPTH = 3;
 // ---------------------------------------------------------------------------
 
 /**
- * Input schema for spawn_subagent. Slice 9 deliberately narrows
- * ADR-003's surface (which mentions optional `system` and `tools`
- * overrides) — those LLM-controlled overrides are deferred to v2 if
- * a real use case demonstrates need. The v1 surface is goal-only
- * with optional budget overrides clamped to the ADR-003 maxima.
+ * Input schema for spawn_subagent. The v1 surface deliberately narrows
+ * ADR-003's design (which mentions optional `system` and `tools`
+ * overrides) — those LLM-controlled overrides are deferred until a
+ * real use case demonstrates need. The v1 surface is goal-only with
+ * optional budget overrides clamped to the ADR-003 maxima.
  */
 export const SpawnSubagentInputSchema = z
   .object({

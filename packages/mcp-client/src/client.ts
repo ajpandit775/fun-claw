@@ -7,7 +7,7 @@
 //     stdio transport, drives the JSON-RPC initialize handshake,
 //     queries `tools/list`, and returns Fun Claw `ToolDefinition`s
 //     (with the `mcp__<server>__<tool>` prefix already applied).
-//     Bounded by a 5-second startup window per the Slice 7 kickoff.
+//     Bounded by a 5-second startup window.
 //   - `callTool(toolName, args, signal)` — calls a tool, capped at 30
 //     seconds with the caller's AbortSignal threaded into the SDK's
 //     RequestOptions. Failures are FC-3xxx FunClawErrors.
@@ -30,7 +30,7 @@
 // the transport.
 //
 // Reference docs:
-//   - .claude/CLAUDE.md (Slice 7 pre-decisions; FC-3xxx narrow
+//   - .claude/CLAUDE.md (MCP pre-decisions; FC-3xxx narrow
 //     specificity policy).
 //   - docs/adr/ADR-001-trust-boundaries.md (MCP servers on host).
 //   - REQUIREMENTS.md Flow 4 (MCP server lifecycle).
@@ -51,10 +51,10 @@ import {
 } from "./errors.js";
 import type { McpConnectResult, McpCrashEvent, McpToolMeta, ServerConfig } from "./types.js";
 
-/** 5-second startup cap per the Slice 7 kickoff: spawn + init + first list. */
+/** 5-second startup cap: spawn + init + first list. */
 const STARTUP_TIMEOUT_MS = 5_000;
 
-/** 30-second per-call cap per the Slice 7 kickoff. Configurable per-server later if needed. */
+/** 30-second per-call cap. Configurable per-server later if needed. */
 export const DEFAULT_CALL_TIMEOUT_MS = 30_000;
 
 /**

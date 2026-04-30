@@ -6,7 +6,7 @@
 //   1. `mcpToolToFunClawTool` — the LLM-facing direction. Takes a
 //      single tool descriptor from `client.listTools()` and returns
 //      a `ToolDefinition` with the locked `mcp__<server>__<tool>`
-//      prefix applied (per the Slice 7 kickoff).
+//      prefix applied.
 //
 //   2. `formatMcpCallToolResult` — the LLM-feeding direction. Takes
 //      the structured `content[]` array from `client.callTool()` and
@@ -16,7 +16,7 @@
 //      multi-modal handling is out of v1 scope per REQUIREMENTS.md).
 //
 // Reference docs:
-//   - .claude/CLAUDE.md (Slice 7 pre-decisions: prefix format).
+//   - .claude/CLAUDE.md (MCP pre-decisions: prefix format).
 //   - REQUIREMENTS.md Flow 4 (`mcp__<server>__<tool>` namespacing).
 //   - docs/adr/ADR-001-trust-boundaries.md (tool output is adversarial
 //     on the next turn — no escaping here, the system prompt's

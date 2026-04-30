@@ -43,7 +43,7 @@ export interface SystemPromptOptions {
    */
   mcpServerNames?: readonly string[];
   /**
-   * Skills available in this session (Slice 8). When non-empty, the
+   * Skills available in this session. When non-empty, the
    * prompt includes a "## Skills available" section listing each
    * skill by name + description + source. The section also tells the
    * agent how to load a skill (call its `skill__<name>` tool to
@@ -53,7 +53,7 @@ export interface SystemPromptOptions {
    */
   skills?: readonly SystemPromptSkill[];
   /**
-   * Subagent-invocation framing (Slice 9, per ADR-003). When provided
+   * Subagent-invocation framing (per ADR-003). When provided
    * at depth ≥ 1, the prompt prepends a paragraph identifying the
    * loop as a subagent invocation, including the parent's goal text
    * and (when depth ≥ 3) an explicit note that further spawning is
@@ -113,7 +113,7 @@ export function buildSystemPrompt(opts: SystemPromptOptions): string {
 
   const lines: string[] = [];
 
-  // Subagent framing (Slice 9, per ADR-003). When this loop is a
+  // Subagent framing (per ADR-003). When this loop is a
   // subagent invocation, the FIRST thing the model sees is its
   // narrow purpose, the parent's goal, and the depth marker. This
   // anchors the persona BEFORE the generic Fun Claw introduction
@@ -204,8 +204,8 @@ export function buildSystemPrompt(opts: SystemPromptOptions): string {
     );
   }
 
-  // Skills available section (Slice 8). When skills loaded, list
-  // them so the agent knows which `skill__<name>` tools surface
+  // Skills available section. When skills loaded, list them so the
+  // agent knows which `skill__<name>` tools surface
   // instructions for which task. The section also explains the
   // skill execution pattern: call the tool to load the body, then
   // run scripts via execute_bash against /skills/<name>/scripts/.

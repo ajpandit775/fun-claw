@@ -1,6 +1,6 @@
 // `funclaw skill` — local skill discovery, inspection, and validation.
 //
-// Three subcommands replace the Slice 4 stub:
+// Three subcommands:
 //
 //   - `funclaw skill list` — discovers skills across the three
 //     resolution sources (bundled / user / project) and prints a
@@ -21,8 +21,8 @@
 // read-only inspection.
 //
 // Reference docs:
-//   - .claude/CLAUDE.md (Slice 8 pre-decisions: list / show /
-//     validate; no creation/editing).
+//   - .claude/CLAUDE.md (skill subcommand pre-decisions: list / show
+//     / validate; no creation/editing).
 //   - REQUIREMENTS.md Flow 3 / Flow 7 / Flow 8.
 
 import { isFunClawError } from "@funclaw/core";

@@ -1,11 +1,10 @@
 // `funclaw doctor` — environment diagnostics.
 //
-// Replaces the Slice 4 stub with a five-check implementation per the
-// Slice 10 kickoff. The doctor consumes existing infrastructure
+// A five-check implementation that consumes existing infrastructure
 // (loadConfig, getSecret, DockerRunner, createProvider) rather than
-// reimplementing it — its job is to drive that infrastructure
-// through enough success / failure paths that a user can diagnose
-// their environment before running `funclaw chat`.
+// reimplementing it — the job is to drive that infrastructure through
+// enough success / failure paths that a user can diagnose their
+// environment before running `funclaw chat`.
 //
 // Five checks, run in order:
 //   1. Docker daemon reachable (FC-1001 / FC-1004 on failure).
@@ -32,7 +31,7 @@
 // Reference docs:
 //   - .claude/CLAUDE.md "Saved feedback" — the locked rule that every
 //     FC code in source has a docs/troubleshooting.md entry; the
-//     Slice 9 feedback that the doctor consumes
+//     subagent-cleanup feedback noting that the doctor consumes
 //     `listOrphanedSessions`'s `subagentId` field for grouped display.
 //   - REQUIREMENTS.md Flow 6 — the doctor's role in the install flow.
 
@@ -522,9 +521,9 @@ async function checkOrphanedContainers(config: UserConfig | undefined): Promise<
   }
 
   // Group orphans by root sessionId so the user sees the structure
-  // (root + its subagents indented underneath). Per Slice 9: each
-  // OrphanedSessionInfo carries `subagentId?: string`; presence
-  // means the entry is a subagent, absence means a root.
+  // (root + its subagents indented underneath). Each
+  // OrphanedSessionInfo carries `subagentId?: string`; presence means
+  // the entry is a subagent, absence means a root.
   const grouped = groupOrphans(orphans);
   const lines: string[] = [];
   for (const [sessionId, group] of grouped) {

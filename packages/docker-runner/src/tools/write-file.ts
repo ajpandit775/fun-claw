@@ -20,9 +20,9 @@
 //   - FC-1032 — invalid characters in path (NUL, leading whitespace).
 //
 // All three codes are FC-1xxx because this is docker-runner territory
-// (the container is the failure surface). Per the locked
-// "narrow-specificity" rule from Slice 3 saved feedback: distinct
-// failure modes get distinct codes.
+// (the container is the failure surface). Distinct failure modes get
+// distinct codes (the "narrow-specificity" rule documented in
+// CLAUDE.md saved feedback).
 //
 // Reference docs:
 //   - .claude/CLAUDE.md "Key rules" (path traversal protection,
@@ -195,9 +195,9 @@ export interface RunWriteFileOptions {
  * `[A-Za-z0-9+/=]` so the encoded payload has no shell-quoting
  * hazards.
  *
- * **Why not stdin streaming?** Slice 8 added optional stdin support
- * to `SessionHandle.exec` and the kickoff suggested using it here,
- * but dockerode's hijacked-stream `.end()` is interpreted by the
+ * **Why not stdin streaming?** `SessionHandle.exec` supports an
+ * optional stdin parameter, but dockerode's hijacked-stream `.end()`
+ * is interpreted by the
  * Docker daemon as "client disconnected" rather than "stdin EOF on
  * exec" — the child gets killed and `inspect.ExitCode` returns null
  * (rendered as -1 by the runner). Base64-via-shell avoids the issue
