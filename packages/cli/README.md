@@ -2,17 +2,19 @@
 
 A small, sandboxed, autonomous AI agent CLI. **The easy Claw.**
 
-Fun Claw takes a goal in plain English, plans how to achieve it, and uses tools (running shell commands, reading and writing files, calling external services) to do the work — all inside a Docker sandbox so it can't accidentally damage your host. Sensible defaults from across the 2026 Claw ecosystem in one Apache 2.0 codebase, written in TypeScript on Node 22 LTS.
+Fun Claw takes a goal in plain English, plans how to achieve it, and uses tools (running shell commands, reading and writing files, calling external services) to do the work — all inside a Docker sandbox so it can't accidentally damage your host. Sensible defaults in one Apache 2.0 codebase, written in TypeScript on Node 22 LTS.
 
 ## Status
 
-This is **v0.1.0** — the first public release. The features are real and tested, but the docs are still getting polished. The proper getting-started guide and FAQ arrive in the next release.
+This is **v0.1.0** — the first public release. The features are real and tested. The full getting-started guide and FAQ arrive in the next release.
 
 ## Install
 
 ```sh
 npm install -g fun-claw
 ```
+
+After install, the command is `funclaw` (no hyphen).
 
 You'll need:
 
@@ -34,7 +36,7 @@ Inside the chat, type goals in plain English. Fun Claw decides which tools to ca
 
 - **Built-in tools:** `execute_bash` (run shell commands inside the sandbox), `write_file` (write files into the sandbox `/workspace`), `spawn_subagent` (delegate a sub-task to an isolated nested agent).
 - **MCP support:** point Fun Claw at any [Model Context Protocol](https://modelcontextprotocol.io) server via your config file. Filesystem, GitHub, Postgres, and the rest of the ecosystem just work.
-- **Skills:** drop a SKILL.md (the [agentskills.io](https://agentskills.io) standard format used by OpenClaw, Claude Code, etc.) into `~/.funclaw/skills/` and Fun Claw picks it up. Or just ask Fun Claw to write a skill for you — that's the dominant pattern.
+- **Skills:** drop a SKILL.md (the [agentskills.io](https://agentskills.io) standard format used by OpenClaw, Claude Code, etc.) into `~/.funclaw/skills/` and Fun Claw picks it up. A skill is a markdown file with brief frontmatter and instructions; the agent invokes it via a tool call when relevant. Or just ask Fun Claw to write a skill for you — that's how most users end up authoring skills.
 
 ## Security model
 
@@ -42,7 +44,7 @@ The sandbox is the boundary. Tool execution runs inside a Docker container with:
 
 - A non-root user (`uid 10001`).
 - A read-only root filesystem with a writable `/workspace` and `/tmp`.
-- No host network access by default (configurable to `bridge`).
+- Network mode is `bridge` by default (isolated network namespace, internet access). Configurable to `none` for fully offline sandbox.
 - No bind-mounted Docker socket. No `--privileged`. No `--pid=host`. No `--network=host`.
 
 What the sandbox does **not** protect against:
