@@ -173,7 +173,7 @@ export async function runInitWizard(logger: FunClawLogger): Promise<void> {
       runtimeImage: () =>
         text({
           message: "Which Docker image should the sandbox use?",
-          initialValue: "ubuntu:24.04",
+          initialValue: "ghcr.io/ajpandit775/fun-claw-runtime:0.1.0",
         }),
       logLevel: () =>
         select({

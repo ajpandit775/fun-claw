@@ -65,10 +65,11 @@ const DOCKER_PING_TIMEOUT_MS = 5_000;
  *  cap is generous so a slow first connection on a cold network
  *  doesn't trip the doctor unnecessarily. */
 const PROVIDER_PING_TIMEOUT_MS = 15_000;
-/** ubuntu:24.04 default mirroring chat.ts's DEFAULT_RUNTIME_IMAGE.
- *  Slice 11 flips this to ghcr.io/funclaw/runtime when the published
- *  image lands. */
-const DEFAULT_RUNTIME_IMAGE = "ubuntu:24.04";
+/** Default mirrors chat.ts's DEFAULT_RUNTIME_IMAGE — the published
+ *  runtime image at ghcr.io/ajpandit775/fun-claw-runtime. The doctor
+ *  uses this when checking image presence locally; the user's
+ *  config can override via `runtimeImage = "..."` in funclaw.config.toml. */
+const DEFAULT_RUNTIME_IMAGE = "ghcr.io/ajpandit775/fun-claw-runtime:0.1.0";
 
 // ---------------------------------------------------------------------------
 // Public surface

@@ -1,0 +1,12 @@
+{
+  "name": "@funclaw/runtime-image",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Fun Claw sandbox runtime image. Dockerfile + entrypoint + build scripts. Published to ghcr.io/ajpandit775/fun-claw-runtime.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:local": "node scripts/build.mjs --tag local",
+    "verify": "node scripts/verify.mjs"
+  }
+}

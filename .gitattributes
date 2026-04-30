@@ -1,0 +1,11 @@
+# Force LF on files that get baked into Linux container images.
+# A CRLF in the shebang (#!/bin/sh\r\n) makes the kernel try to exec
+# `/bin/sh\r` and fail with "no such file or directory" — the runtime
+# image's entrypoint.sh would silently break for any Windows clone of
+# this repo where Git's autocrlf is true (default on Git for Windows).
+*.sh text eol=lf
+Dockerfile text eol=lf
+
+# pnpm-lock.yaml: keep LF so the file hash is stable across platforms
+# (pnpm computes integrity hashes on the file contents).
+pnpm-lock.yaml text eol=lf

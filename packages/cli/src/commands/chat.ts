@@ -95,12 +95,12 @@ const DEFAULT_MODEL_BY_PROVIDER: Readonly<Record<Provider, string>> = {
 };
 
 /**
- * Default sandbox image when `config.runtimeImage` is unset. Slice 11
- * flips this to the published `ghcr.io/funclaw/runtime:0.x-noble`
- * image at release time (per the saved feedback entry); until then
- * plain ubuntu:24.04 is the most realistic dev default.
+ * Default sandbox image when `config.runtimeImage` is unset. Points
+ * at the published runtime image whose Dockerfile lives at
+ * `packages/runtime-image/`. Released alongside the matching CLI
+ * version — bump in lockstep when issuing a new release.
  */
-const DEFAULT_RUNTIME_IMAGE = "ubuntu:24.04";
+const DEFAULT_RUNTIME_IMAGE = "ghcr.io/ajpandit775/fun-claw-runtime:0.1.0";
 
 /** Track an active MCP server so we can disconnect on exit. */
 interface ActiveMcpServer {
