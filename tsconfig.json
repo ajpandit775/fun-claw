@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "//": "Solution-style tsconfig: compiles nothing itself, just walks references for `tsc -b`.",
+  "files": [],
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/mcp-client" },
+    { "path": "./packages/skills" },
+    { "path": "./packages/docker-runner" },
+    { "path": "./packages/cli" }
+  ]
+}

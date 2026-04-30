@@ -1,0 +1,37 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+*.tsbuildinfo
+
+# test + coverage
+coverage/
+.nyc_output/
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# env + local config
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# editors
+.idea/
+*.swp
+*.swo
+
+# Fun Claw runtime artifacts (when present locally)
+.funclaw/state.json
+
+# personal Claude Code preferences (do not commit)
+.claude/settings.local.json

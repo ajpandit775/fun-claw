@@ -1,0 +1,29 @@
+{
+  "name": "@funclaw/skills",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Fun Claw skills: agentskills.io SKILL.md parser, frontmatter validation, system-prompt indexing. Pure parser; never executes skill content.",
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "bundled"
+  ],
+  "dependencies": {
+    "@funclaw/core": "workspace:*",
+    "env-paths": "^3.0.0",
+    "yaml": "^2.0.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  }
+}

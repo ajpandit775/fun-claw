@@ -1,0 +1,29 @@
+{
+  "name": "funclaw",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Fun Claw — the easy Claw. A friendly autonomous AI agent that runs in your terminal with a Docker sandbox.",
+  "license": "Apache-2.0",
+  "author": "The Fun Claw Maintainers",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "tsc -b",
+    "check": "biome ci .",
+    "format": "biome check --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.0",
+    "@vitest/coverage-v8": "~4.1.0",
+    "fast-check": "^4.7.0",
+    "memfs": "^4.57.2",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "~4.1.0"
+  },
+  "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8"
+}

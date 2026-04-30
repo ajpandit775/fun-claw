@@ -1,0 +1,10 @@
+# Reserved for bundled skills shipped with Fun Claw.
+#
+# v1 ships zero bundled skills — the dominant pattern (REQUIREMENTS.md
+# Flow 7) is users asking the agent to author skills directly into
+# their user-level skills directory. Future bundled skills land here as
+# subdirectories: `bundled/<name>/SKILL.md` + `bundled/<name>/scripts/`.
+#
+# This file's only job is to keep the directory present in git so the
+# discovery walker has a stable path to look in. Replace with real
+# skills when v1.x adds them.

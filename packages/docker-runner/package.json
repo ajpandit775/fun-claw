@@ -1,0 +1,29 @@
+{
+  "name": "@funclaw/docker-runner",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Fun Claw Docker runner: dockerode wrapper for sandbox container lifecycle, exec, and label-based cleanup.",
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@funclaw/core": "workspace:*",
+    "dockerode": "^4.0.0",
+    "p-limit": "^6.0.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/dockerode": "^3.3.0",
+    "@types/node": "^22.0.0"
+  }
+}
