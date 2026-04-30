@@ -1,11 +1,33 @@
-# Force LF on files that get baked into Linux container images.
-# A CRLF in the shebang (#!/bin/sh\r\n) makes the kernel try to exec
-# `/bin/sh\r` and fail with "no such file or directory" — the runtime
-# image's entrypoint.sh would silently break for any Windows clone of
-# this repo where Git's autocrlf is true (default on Git for Windows).
+# All text files: detect line ending automatically AND store as LF
+# in the working tree on every platform. biome.json's formatter sets
+# `"lineEnding": "lf"` and treats CRLF as a format violation; without
+# this rule, Windows clones with `core.autocrlf=true` (Git for Windows
+# default) end up with CRLF in the working tree and biome ci fails on
+# the Windows GitHub Actions runner with "File content differs from
+# formatting output" on every source file.
+* text=auto eol=lf
+
+# Belt-and-braces explicit rules for files that ABSOLUTELY must be LF
+# regardless of the catch-all above (in case it's ever weakened or
+# someone overrides it locally):
+
+# Files that get baked into Linux container images. A CRLF in the
+# shebang (#!/bin/sh\r\n) makes the kernel try to exec `/bin/sh\r`
+# and fail with "no such file or directory".
 *.sh text eol=lf
 Dockerfile text eol=lf
 
-# pnpm-lock.yaml: keep LF so the file hash is stable across platforms
+# pnpm-lock.yaml: LF keeps the file hash stable across platforms
 # (pnpm computes integrity hashes on the file contents).
 pnpm-lock.yaml text eol=lf
+
+# Common binary file types: don't try to detect or convert.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.zip binary
+*.gz binary
+*.tar binary
