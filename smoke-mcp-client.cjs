@@ -91,7 +91,7 @@ async function main() {
     }
 
     // (A3) input schema preserved verbatim
-    const echoSchema = echoTool && echoTool.inputSchema;
+    const echoSchema = echoTool?.inputSchema;
     const echoOk =
       echoSchema !== undefined &&
       echoSchema.type === "object" &&

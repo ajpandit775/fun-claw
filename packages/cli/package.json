@@ -36,6 +36,7 @@
     "README.md"
   ],
   "scripts": {
+    "prebuild": "node ./scripts/clean-dist.mjs",
     "build": "tsup",
     "dev": "node ./dist/index.js",
     "prepublishOnly": "node ./scripts/sync-readme.mjs"

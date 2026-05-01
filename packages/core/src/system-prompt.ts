@@ -217,7 +217,7 @@ export function buildSystemPrompt(opts: SystemPromptOptions): string {
       "",
     );
     for (const s of skills as readonly SystemPromptSkill[]) {
-      const scriptsHint = s.hasScripts ? " — scripts at `/skills/" + s.name + "/scripts/`" : "";
+      const scriptsHint = s.hasScripts ? ` — scripts at \`/skills/${s.name}/scripts/\`` : "";
       lines.push(`- \`skill__${s.name}\` (source: ${s.source})${scriptsHint} — ${s.description}`);
     }
     lines.push(
