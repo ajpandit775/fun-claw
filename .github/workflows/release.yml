@@ -130,6 +130,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsc -b
 
       - name: Build CLI bundle
         run: pnpm -F fun-claw run build
