@@ -37,7 +37,8 @@
   ],
   "scripts": {
     "build": "tsup",
-    "dev": "node ./dist/index.js"
+    "dev": "node ./dist/index.js",
+    "prepublishOnly": "node ./scripts/sync-readme.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
