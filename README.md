@@ -76,6 +76,12 @@ This is a deliberately small project. The following are **not** in v1, by design
 
 [Apache 2.0](./LICENSE).
 
+## Built with
+
+Fun Claw is built on TypeScript, [ink](https://github.com/vadimdemedes/ink) (terminal UI), [commander](https://github.com/tj/commander.js) (CLI parsing), and the official SDKs from [Anthropic](https://github.com/anthropics/anthropic-sdk-typescript), [OpenAI](https://github.com/openai/openai-node), and [Google](https://github.com/googleapis/js-genai) for LLM access. The container sandbox uses [dockerode](https://github.com/apocas/dockerode). Skills follow the [agentskills.io](https://agentskills.io) standard format developed by the broader agent ecosystem.
+
+Apache 2.0 dependencies enabled Apache 2.0 Fun Claw. Thanks to all the maintainers whose work made this small project possible.
+
 ## Issues
 
 Bugs and feature requests: <https://github.com/ajpandit775/fun-claw/issues>.

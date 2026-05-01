@@ -6,7 +6,7 @@ Fun Claw takes a goal in plain English, plans how to achieve it, and uses tools 
 
 ## Status
 
-This is **v0.1.0** — the first public release. The features are real and tested. The full getting-started guide and FAQ arrive in the next release.
+This is **v0.1.x** — the first public release. The features are real and tested. The getting-started guide and FAQ ship with v0.1.x; troubleshooting, skill authoring, and MCP integration docs arrive in v0.2.0.
 
 ## Install
 
@@ -31,6 +31,13 @@ funclaw chat     # start a conversation
 ```
 
 Inside the chat, type goals in plain English. Fun Claw decides which tools to call, runs them in a sandboxed container, and streams the results back. `Ctrl-C` once interrupts the current turn; twice exits cleanly.
+
+## Documentation
+
+- [Getting started](./docs/getting-started.md) — install, first run, sandbox model, your first chat
+- [FAQ](./docs/faq.md) — answers to the questions people actually ask
+
+More documentation (troubleshooting cookbook, skill authoring guide, MCP integration guide) lands in v0.2.0.
 
 ## What's in the box
 
@@ -68,6 +75,12 @@ This is a deliberately small project. The following are **not** in v1, by design
 ## License
 
 [Apache 2.0](./LICENSE).
+
+## Built with
+
+Fun Claw is built on TypeScript, [ink](https://github.com/vadimdemedes/ink) (terminal UI), [commander](https://github.com/tj/commander.js) (CLI parsing), and the official SDKs from [Anthropic](https://github.com/anthropics/anthropic-sdk-typescript), [OpenAI](https://github.com/openai/openai-node), and [Google](https://github.com/googleapis/js-genai) for LLM access. The container sandbox uses [dockerode](https://github.com/apocas/dockerode). Skills follow the [agentskills.io](https://agentskills.io) standard format developed by the broader agent ecosystem.
+
+Apache 2.0 dependencies enabled Apache 2.0 Fun Claw. Thanks to all the maintainers whose work made this small project possible.
 
 ## Issues
 
