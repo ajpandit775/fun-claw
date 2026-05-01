@@ -19,7 +19,6 @@
   "dependencies": {
     "@funclaw/core": "workspace:*",
     "dockerode": "^4.0.0",
-    "p-limit": "^6.0.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {

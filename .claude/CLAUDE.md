@@ -680,3 +680,49 @@ The Slice 12 docs scope was reduced from five docs to two during the v0.1.x clea
 **Voice across all three matches the locked Slice 12 voice:** warm, slightly playful, never corporate; one-paragraph framing at top; code blocks for commands; no Conclusion sections; verification-report-before-apply for every factual claim.
 
 **Estimated scope:** 1.5–2 days of Claude Code work plus reviewer cycles, scheduled after coverage rework + status badges land in v0.2.0.
+
+## 2026-05-01: v0.1.1 hotfix — ESM-only `p-limit` in a CJS bundle = `Dynamic require` failure on fresh installs
+**Bug:** the published v0.1.0 CLI bundle is CJS (per `packages/cli/tsup.config.ts` `format: ["cjs"]`), and `p-limit@^6.0.0` is ESM-only (their `package.json` has `"type": "module"`). tsup externalizes `p-limit` (it's in `cliExternals`), so the bundle's line 110 emits `var p_limit_1 = __importDefault(__require("p-limit"));`. Node's CJS loader refuses to `require()` an ESM-only module and throws `Dynamic require of "p-limit" is not supported` — esbuild's verbatim shim error message. The error fires at `funclaw chat` startup on fresh installs, after skill discovery completes (skillCount logged) but before the agent loop runs.
+
+**Fix:** pin `p-limit` to `^3.1.0` in `packages/core/package.json` and `packages/cli/package.json`. p-limit v3.x is the last CJS-compatible release; the API is identical (`pLimit(n)` returns a function accepting a thunk). Same line in the bundled output, but now `__require("p-limit")` resolves to a CJS module and succeeds. Removed the unused `p-limit` dep from `packages/docker-runner/package.json` while we were in there (no source imports it).
+
+**Architectural question deferred to v0.2.0+:** should Fun Claw ship as ESM rather than CJS? The ESM-only ecosystem keeps growing (p-limit, chalk, execa, ink itself); pinning each one to the last CJS release is a finite-life strategy. v0.2.0 should evaluate flipping the published bundle to ESM (`format: ["esm"]` in tsup, plus a top-level `"type": "module"` in the published `package.json` plus reworking the bin's shebang setup). Out of scope for v0.1.1 — too much surface area to land under launch pressure.
+
+**Test-surface gap (the deeper bug):** no automated test exercises BOTH (a) the bundled CJS output AND (b) the agent-loop code path that imports `p-limit`. Vitest runs against TS source where ESM imports work fine. The existing CI smokes (`smoke-runner.cjs`, `smoke-mcp-client.cjs`) don't touch the agent loop. The chat E2E smoke (`smoke-chat-e2e.cjs`) IS the test that would have caught this — but it's gated behind `RUN_LIVE_LLM_TESTS=1` and never runs in CI (a deliberate Slice 11 cost decision; live LLM in CI is v0.2.0 work). So this bug shipped past every gate we have.
+
+**Locked rule going forward:** ESM-only packages externalized in a CJS tsup bundle become latent crashes: the bundle compiles fine but `__require()` fails at runtime because Node's CJS loader cannot import ESM-only modules via the synchronous require path. Two valid patterns: (a) pin the dependency to a CJS-compatible major version, OR (b) refactor the call site to `const { default: x } = await import('pkg')` inside an async function. A third option — switching the bundle itself to ESM — is a v0.2.0+ architectural decision, not a per-dependency fix. Bundling appears to succeed in all cases; the failure surfaces only at runtime on a fresh install, which is why this class of bug needs a fresh-install smoke gate.
+
+**Verification record:** gate 5f (live `smoke-chat-e2e.cjs` against `gpt-4o-mini` + real Docker, with the bundled binary, on the maintainer's Windows 11 Pro machine, 2026-05-01) passed 6/6 assertions end-to-end. The agent loop loaded `p-limit@3.1.0`, dispatched a real tool call, parsed the result, generated coherent follow-up text, and cleaned up the container. Container labels showed `funclaw.session=<uuid>`. Cost: fractions of a cent. This was the gate that actually caught the regression — not by failing on the broken version, but by the maintainer running a fresh-install smoke test before launch.
+
+**Release-gate rule until v0.2.0 testcontainers wiring lands:** `smoke-chat-e2e.cjs` MUST be run manually before every `npm publish`. The script lives at the repo root; it's gated by `RUN_LIVE_LLM_TESTS=1` + `OPENAI_API_KEY`, costs a fraction of a cent, takes ~30 seconds. A green run of this smoke against the LOCALLY-BUILT bundle (not just the TS source) is the only thing that proves the published binary actually works end-to-end on fresh installs. Until v0.2.0 wires this into vitest via testcontainers-node + sets up a CI-side LLM key with budget cap, manual is the gate.
+
+## 2026-05-01: Workspace dep audit — defer to v0.2.0
+While fixing the p-limit ESM issue we noticed `packages/docker-runner/package.json` listed `p-limit` as a runtime dep but no source file in that package imports it. Cleaned up as part of the v0.1.1 commit. **Audit unused deps across all packages in v0.2.0** — specifically check `docker-runner`, `mcp-client`, `skills` for similar listed-but-unused dependencies that would inflate the published `fun-claw` package's transitive `node_modules` footprint. Tools like `depcheck` make this a 5-minute audit; deferred from v0.1.1 to keep the launch-blocker fix surgical.
+
+## 2026-05-01: Process model framing — content gap to fill in v0.1.x docs update or v0.2.0
+The shipped `docs/getting-started.md` and `docs/faq.md` do not explicitly cover Fun Claw's process model: that it has no persistent process, no daemon, no background service, no scheduled tasks. The "what Fun Claw cannot do" framing is entirely absent. This is a real user-expectation gap because users coming from ChatGPT / Claude.ai assume conversation memory persists, and users coming from GUI tools assume "the app" exists between sessions.
+
+**The framing language to use** (drop into docs nearly verbatim, refined during 2026-05-01 session):
+
+> Fun Claw has no persistent process. No background service. No daemon. No scheduled tasks. It's a foreground command-line program that only does work while you're actively using it.
+>
+> Things Fun Claw cannot do: run while your laptop is asleep; run while you're logged out; run while you're not actively interacting with it; wake itself up; start itself on boot; persist memory between sessions (no continuity across chats — each `funclaw chat` is fresh); make decisions on your behalf when you're not watching; connect to the internet without you starting a session; modify files outside the Docker sandbox; spend money on API calls when you're not using it.
+>
+> Things Fun Claw can do, but only while you're actively chatting: run shell commands inside its Docker sandbox; write files inside `/workspace` inside the container; connect to MCP servers if you've configured them (those run with your user permissions, not in the sandbox); spawn isolated subagents; spend your API credits at the LLM provider you configured.
+>
+> The terminal IS the chat — when you run `funclaw chat`, your terminal window becomes the chat interface. There's no separate window that pops up. The ink-based TUI renders chat history, tool call status, and a status bar all inside the terminal.
+>
+> Resource usage when running: ~100-200 MB RAM for the Docker container plus a similar amount for the Fun Claw process. Zero when not running, except for whatever Docker Desktop uses when idle (~1-2 GB on Windows — but that's Docker Desktop, not Fun Claw).
+
+**Recommended placement:**
+
+1. **New section in `docs/getting-started.md`** titled "What Fun Claw is (and isn't)" — placed right after the lede, before "Before you install." Short version of the framing above (3-5 sentences max — don't bloat). Lead with "Fun Claw has no persistent process" and the terminal-IS-the-chat point; cover the rest in the FAQ.
+
+2. **New FAQ entries in `docs/faq.md`:**
+   - "Does Fun Claw run in the background?" (No daemon, no scheduled tasks, runs only while you're chatting.)
+   - "Does Fun Claw remember our previous chats?" (No. Each `funclaw chat` is a fresh session. No cross-chat memory in v0.1.x.)
+   - "What happens if my laptop goes to sleep mid-chat?" (Fun Claw doesn't crash, but the terminal session may be in a weird state on wake — finish chats before sleeping, or at least let in-flight tool calls complete.)
+   - "What happens if Docker Desktop crashes mid-chat?" (Next tool call fails with a Docker error — restart Docker Desktop, then either start a fresh `funclaw chat` or retry the failed command.)
+   - Optional: "Does Fun Claw cost me money when I'm not using it?" (No. Zero API spend when no chat is running.)
+
+**Decision needed when this doc work happens** (probably tomorrow's docs polish or v0.2.0): whether to ship this as a v0.1.2 docs update commit, or fold it into v0.2.0's planned skill-authoring / troubleshooting / MCP docs work. The framing is ready; the placement decision is small.
