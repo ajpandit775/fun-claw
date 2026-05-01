@@ -12,7 +12,7 @@ First public release.
 - Provider support for Anthropic Claude, OpenAI, Google Gemini, and any OpenAI-compatible endpoint.
 - Hardened Docker sandbox for all tool execution. Non-root, read-only rootfs, no privileged capabilities.
 - Built-in tools: `execute_bash`, `write_file`, `spawn_subagent`.
-- [agentskills.io](http://agentskills.io)-format skills loaded from `~/.funclaw/skills/`.
+- [agentskills.io](https://agentskills.io)-format skills loaded from `~/.funclaw/skills/`.
 - Model Context Protocol (MCP) server support via stdio transport.
 - CLI subcommands: `init`, `chat`, `doctor`, `skill`, `mcp`.
 - Published runtime image at `ghcr.io/ajpandit775/fun-claw-runtime:0.1.0`.
