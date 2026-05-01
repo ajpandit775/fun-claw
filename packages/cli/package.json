@@ -7,7 +7,7 @@
   "homepage": "https://github.com/ajpandit775/fun-claw#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ajpandit775/fun-claw"
+    "url": "git+https://github.com/ajpandit775/fun-claw.git"
   },
   "bugs": {
     "url": "https://github.com/ajpandit775/fun-claw/issues"
@@ -28,7 +28,7 @@
   },
   "type": "commonjs",
   "bin": {
-    "funclaw": "./dist/index.js"
+    "funclaw": "dist/index.js"
   },
   "files": [
     "dist",
