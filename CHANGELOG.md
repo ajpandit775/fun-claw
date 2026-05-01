@@ -4,6 +4,23 @@ All notable changes to Fun Claw will be documented in this file. The format is l
 
 ## v0.1.0 — 2026-04-30
 
-First public release. Fun Claw can take a goal in plain English, plan tool calls against the configured LLM provider (Anthropic Claude / OpenAI / Google Gemini / any OpenAI-compatible endpoint), and execute those tool calls inside a hardened Docker sandbox. Built-in tools are `execute_bash`, `write_file`, and `spawn_subagent`; agentskills.io-format skills and Model Context Protocol (MCP) servers are first-class. The CLI ships with `init`, `chat`, `doctor`, `skill`, and `mcp` subcommands. The published runtime sandbox image lives at `ghcr.io/ajpandit775/fun-claw-runtime:0.1.0`.
+First public release.
 
-Deferred to subsequent releases: testcontainers-node integration to wire the project-root smoke scripts into the unit-test runner, raising the coverage thresholds back to the 85% / 70% targets recorded in `CLAUDE.md` (the v0.1.0 floor is 75/60-ish core, 20-25 adapter — what the unit suite alone can sustain), the live MCP end-to-end smoke (gated by `RUN_LIVE_LLM_TESTS` and currently a release-time manual step), and full documentation polish (the proper getting-started guide and FAQ). See the GitHub release at <https://github.com/ajpandit775/fun-claw/releases/tag/v0.1.0> for the auto-generated commit-level changelog.
+### What's in the box
+
+- Plain-English chat interface to an autonomous AI agent.
+- Provider support for Anthropic Claude, OpenAI, Google Gemini, and any OpenAI-compatible endpoint.
+- Hardened Docker sandbox for all tool execution. Non-root, read-only rootfs, no privileged capabilities.
+- Built-in tools: `execute_bash`, `write_file`, `spawn_subagent`.
+- [agentskills.io](http://agentskills.io)-format skills loaded from `~/.funclaw/skills/`.
+- Model Context Protocol (MCP) server support via stdio transport.
+- CLI subcommands: `init`, `chat`, `doctor`, `skill`, `mcp`.
+- Published runtime image at `ghcr.io/ajpandit775/fun-claw-runtime:0.1.0`.
+
+### Known limitations
+
+- Coverage floor for v0.1.0 is the realistic unit-suite minimum (75% core, 20-25% adapter packages). The 85/70 targets in our internal docs require testcontainers-node integration that's deferred to v0.2.0.
+- The live MCP end-to-end smoke is currently a release-time manual step gated by the `RUN_LIVE_LLM_TESTS` environment variable. Linux CI integration of this smoke is deferred to v0.2.0.
+- Full documentation (getting-started guide, FAQ, troubleshooting cookbook) arrives in v0.2.0. The current README is a minimal install-and-run reference.
+
+See the [GitHub release](https://github.com/ajpandit775/fun-claw/releases/tag/v0.1.0) for the auto-generated commit-level changelog.
