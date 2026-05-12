@@ -682,6 +682,8 @@ The Slice 12 docs scope was reduced from five docs to two during the v0.1.x clea
 **Estimated scope:** 1.5–2 days of Claude Code work plus reviewer cycles, scheduled after coverage rework + status badges land in v0.2.0.
 
 ## 2026-05-01: v0.1.1 hotfix — ESM-only `p-limit` in a CJS bundle = `Dynamic require` failure on fresh installs
+**SUPERSEDED 2026-05-11 — the diagnosis below is incorrect. The bug isn't about p-limit's own module format; it's about esbuild's `__require2` shim in the ESM `chat-runtime.mjs` bundle binding to a throw-fallback because ESM modules have no `require` global. See the 2026-05-11 entry. The historical record is retained for the verification trail and the locked-rule (still valid: ESM-only packages in CJS Pattern B externals ARE a latent crash, just not what crashed v0.1.0/v0.1.1).**
+
 **Bug:** the published v0.1.0 CLI bundle is CJS (per `packages/cli/tsup.config.ts` `format: ["cjs"]`), and `p-limit@^6.0.0` is ESM-only (their `package.json` has `"type": "module"`). tsup externalizes `p-limit` (it's in `cliExternals`), so the bundle's line 110 emits `var p_limit_1 = __importDefault(__require("p-limit"));`. Node's CJS loader refuses to `require()` an ESM-only module and throws `Dynamic require of "p-limit" is not supported` — esbuild's verbatim shim error message. The error fires at `funclaw chat` startup on fresh installs, after skill discovery completes (skillCount logged) but before the agent loop runs.
 
 **Fix:** pin `p-limit` to `^3.1.0` in `packages/core/package.json` and `packages/cli/package.json`. p-limit v3.x is the last CJS-compatible release; the API is identical (`pLimit(n)` returns a function accepting a thunk). Same line in the bundled output, but now `__require("p-limit")` resolves to a CJS module and succeeds. Removed the unused `p-limit` dep from `packages/docker-runner/package.json` while we were in there (no source imports it).
@@ -726,3 +728,37 @@ The shipped `docs/getting-started.md` and `docs/faq.md` do not explicitly cover 
    - Optional: "Does Fun Claw cost me money when I'm not using it?" (No. Zero API spend when no chat is running.)
 
 **Decision needed when this doc work happens** (probably tomorrow's docs polish or v0.2.0): whether to ship this as a v0.1.2 docs update commit, or fold it into v0.2.0's planned skill-authoring / troubleshooting / MCP docs work. The framing is ready; the placement decision is small.
+
+## 2026-05-09: tsup forced-inline knob is `noExternal`, not `external`-removal
+`noExternal` is the correct knob for tsup forced-inline; `external` alone does not override tsup's auto-externalize-from-`dependencies` behavior. Dropping a package from the per-entry `external` list leaves it externalized via tsup's default (every `package.json` `dependencies` entry is auto-external unless explicitly opted out). Discovered 2026-05-09 while exploring an inlining approach to the v0.1.x Dynamic-require crash — the inlining direction itself was the wrong fix (see 2026-05-11 entry below for the actual mechanism + createRequire banner fix), but the knob lesson stands: when forcing a `dependencies`-listed package to inline in a tsup bundle, set `noExternal`. Removing from `external` is a no-op.
+
+## 2026-05-11: v0.1.2 hotfix — the real cause of "Dynamic require of X" was the ESM bundle's `__require` shim
+**Probe-driven diagnosis, verified 2026-05-11 against the bundled binary on Windows.** The v0.1.0/v0.1.1 "Dynamic require of p-limit is not supported" crash on fresh install is NOT a p-limit ESM/CJS issue (May 1 entry, wrong) and NOT a tsup auto-externalize issue (Friday 2026-05-09 entry, wrong direction). The real cause:
+
+esbuild emits an IIFE-bound `__require` shim at the top of every bundle:
+```js
+var __require = ((x) => typeof require !== "undefined" ? require : ... fallback ...)(throwFallbackFn);
+```
+The IIFE reads `typeof require` AT MODULE LOAD TIME. In the **CJS bin** (`dist/index.js`), Node provides `require` as a CJS-module global, so the IIFE binds `__require = require` and externalized packages resolve via Node's require. **In the ESM `chat-runtime.mjs` bundle** there is no `require` global; the IIFE falls through to a Proxy wrapping a throw-fallback function. Every `__require("X")` inside a `__commonJS`-wrapped module body in the ESM bundle throws "Dynamic require of X" the moment it executes. p-limit was the first hit because agent-loop's top imports it; the same crash would have fired for any of the 13 externalized CJS-side deps.
+
+**The probe sequence that proved it** (stderr from `OPENAI_API_KEY=sk-fake node packages/cli/dist/index.js chat`):
+```
+PROBE agent-loop top: ...      (CJS — p-limit resolves, module body completes)
+PROBE config top: ...           (CJS — config loads)
+PROBE bin top: ...              (CJS — bin top reached)
+PROBE agent-loop top: ...       (ESM — chat-runtime.mjs's copy of agent-loop)
+funclaw: Dynamic require of "p-limit" is not supported
+```
+Two copies of agent-loop exist (one CJS-bundled, one ESM-bundled). The CJS copy works. The ESM copy crashes because its `__require` is the throw-fallback.
+
+**Fix:** a one-line banner on the ESM tsup entry:
+```ts
+banner: { js: "import{createRequire}from'module';const require=createRequire(import.meta.url);" }
+```
+Declares `require = createRequire(import.meta.url)` at file scope BEFORE esbuild's prologue, so the IIFE sees `typeof require !== "undefined"` and binds `__require = require`. esbuild renames our injected `require` to `require$1` to avoid an internal name collision; the shim follows the rename automatically. External packages resolve via Node's normal node_modules walk from the bundle's location.
+
+**Locked rule:** ANY tsup ESM entry that includes esbuild-wrapped CJS code reaching externalized deps via `__require()` must carry the createRequire banner. The CJS entries do NOT get the banner (their `require` is already Node's global, and an ESM `import` statement is a syntax error in a CJS file).
+
+**Verification gate (kept for re-run):** `OPENAI_API_KEY=sk-fake-for-load-path-only node packages/cli/dist/index.js chat </dev/null`. Bundle health = stdout includes "ready" + stderr includes "Raw mode" without "Dynamic require." This is the canonical post-build smoke for the bundled binary (closes the `smoke-chat-e2e.cjs` gate gap — that smoke runs against `packages/core/dist` + `packages/docker-runner/dist`, NOT the bundled `packages/cli/dist/index.js`, so it cannot catch this class of bug).
+
+**v0.2.0 follow-up:** consider folding the bundle-load gate into `pnpm test` via vitest spawning the bundled binary, OR (preferable) flip the CLI bundle output to ESM so the dual-bundle CJS/ESM split disappears entirely. The createRequire banner is correct for v0.1.2; flipping to ESM is a deeper architectural change.

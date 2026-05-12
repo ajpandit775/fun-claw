@@ -105,6 +105,36 @@ export default defineConfig([
     // entry runs after; setting clean: false here prevents wiping the
     // bin output.
     clean: false,
+    // createRequire banner — repairs esbuild's `__require2` shim in the
+    // ESM bundle.
+    //
+    // Background (v0.1.0/v0.1.1 "Dynamic require of X" incidents,
+    // diagnosed 2026-05-11): every esbuild-emitted bundle defines an
+    // IIFE-bound `__require2` shim that reads `typeof require` AT
+    // MODULE LOAD TIME. In the CJS bin (`dist/index.js`) Node provides
+    // `require` as a CJS-module global, so the IIFE binds `__require2`
+    // to Node's real `require` and externalized packages resolve
+    // normally. In an ESM module no such global exists; the IIFE falls
+    // through to a Proxy wrapping a throw-fallback function, and every
+    // `__require2("X")` inside a `__commonJS`-wrapped module body
+    // throws `Dynamic require of "X" is not supported` the moment it
+    // executes. p-limit was the first such call hit on chat startup
+    // because agent-loop's top imports it; the same crash would have
+    // surfaced for every other externalized CJS-side dep otherwise.
+    //
+    // `module.createRequire(import.meta.url)` builds a real `require`
+    // function rooted at this bundle's own URL. Declared at file scope
+    // BEFORE esbuild's prologue executes, the IIFE captures it and
+    // `__require2 = require`. External packages then resolve via
+    // Node's normal node_modules walk from the published package's
+    // location.
+    //
+    // Locked rule: do NOT add this banner to the CJS bin entry — its
+    // `require` is already Node's CJS global, and prepending an ESM
+    // `import` statement at the top of a CJS file is a syntax error.
+    banner: {
+      js: "import{createRequire}from'module';const require=createRequire(import.meta.url);",
+    },
     external: [
       ...cliExternals,
       // ink + ink-text-input + react stay external in the ESM bundle

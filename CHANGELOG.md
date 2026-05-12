@@ -14,6 +14,19 @@ All notable changes to Fun Claw will be documented in this file. The format is l
 
 - `README.md` Status section updated to reflect that getting-started and FAQ ship with v0.1.x, with troubleshooting, skill authoring, and MCP integration docs deferred to v0.2.0.
 
+## v0.1.2 — 2026-05-11
+
+Hotfix release. Fixes the `Dynamic require of X is not supported` crash that affected v0.1.0 and v0.1.1 on fresh install.
+
+### Fixed
+
+- **`Dynamic require of "p-limit" is not supported` on fresh install.** Root cause: esbuild's `__require` shim in the ESM `chat-runtime.mjs` bundle bound to a throw-fallback because ESM modules have no `require` global at module load. The shim's IIFE captures `typeof require` at module-load time and freezes it — in CJS it's Node's real `require`, in ESM it's the throw-fallback. Every externalized `__require("X")` inside the bundle therefore threw on first call. p-limit happened to be the first dep hit on `funclaw chat` startup. The same crash would have surfaced for any of the 13 externalized CJS-side deps.
+- **Fix:** a one-line banner on the ESM tsup entry — `import{createRequire}from'module';const require=createRequire(import.meta.url);` — declares `require` at file scope before esbuild's prologue runs, so the IIFE captures it and the shim resolves externals via Node's normal `node_modules` walk. No code changes, no dependency changes, no inlining.
+
+### Deprecated
+
+- **v0.1.0 and v0.1.1 are deprecated on npm.** Both versions crash at `funclaw chat` startup on fresh install. Anyone who tried the earlier versions: apologies. The verification gate that should have caught this (`smoke-chat-e2e.cjs`) was running against TypeScript source compiled by `tsc -b`, not the bundled binary that ships in the tarball, so it couldn't see the esbuild-shim issue. That gap is closed in v0.1.2 with an explicit bundle-load gate documented in `.claude/CLAUDE.md`. v0.2.0 will fold it into `pnpm test`.
+
 ## v0.1.0 — 2026-04-30
 
 First public release.
